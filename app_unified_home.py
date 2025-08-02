@@ -226,6 +226,14 @@ def unified_home():
             border-radius: 12px;
             padding: 15px;
             min-height: 300px;
+            transition: all 0.3s;
+            border: 2px dashed transparent;
+        }
+        
+        .kanban-column.drag-over {
+            background: #e8f4fd;
+            border: 2px dashed var(--primary);
+            transform: scale(1.02);
         }
         
         .column-header {
@@ -255,14 +263,26 @@ def unified_home():
             border-radius: 10px;
             padding: 12px;
             margin-bottom: 10px;
-            cursor: move;
+            cursor: grab;
             transition: all 0.3s;
             border-left: 4px solid;
+            user-select: none;
+            -webkit-user-select: none;
+        }
+        
+        .article-card:active {
+            cursor: grabbing;
+            opacity: 0.9;
         }
         
         .article-card:hover {
             transform: translateY(-2px);
             box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+        }
+        
+        .article-card.dragging {
+            opacity: 0.5;
+            cursor: grabbing;
         }
         
         .card-inbox { border-left-color: var(--warning); }
@@ -580,39 +600,39 @@ def unified_home():
                     </button>
                 </div>
                 <div class="kanban-columns">
-                    <div class="kanban-column">
+                    <div class="kanban-column" ondrop="drop(event, 'inbox')" ondragover="allowDrop(event)">
                         <div class="column-header column-inbox">
                             📥 Inbox
                             <span class="column-count" id="inbox-count">0</span>
                         </div>
-                        <div id="inbox-cards" ondrop="drop(event, 'inbox')" ondragover="allowDrop(event)">
+                        <div id="inbox-cards">
                             <!-- Cards loaded here -->
                         </div>
                     </div>
-                    <div class="kanban-column">
+                    <div class="kanban-column" ondrop="drop(event, 'reading')" ondragover="allowDrop(event)">
                         <div class="column-header column-reading">
                             📖 Reading
                             <span class="column-count" id="reading-count-col">0</span>
                         </div>
-                        <div id="reading-cards" ondrop="drop(event, 'reading')" ondragover="allowDrop(event)">
+                        <div id="reading-cards">
                             <!-- Cards loaded here -->
                         </div>
                     </div>
-                    <div class="kanban-column">
+                    <div class="kanban-column" ondrop="drop(event, 'reviewing')" ondragover="allowDrop(event)">
                         <div class="column-header column-reviewing">
                             🔍 Reviewing
                             <span class="column-count" id="reviewing-count">0</span>
                         </div>
-                        <div id="reviewing-cards" ondrop="drop(event, 'reviewing')" ondragover="allowDrop(event)">
+                        <div id="reviewing-cards">
                             <!-- Cards loaded here -->
                         </div>
                     </div>
-                    <div class="kanban-column">
+                    <div class="kanban-column" ondrop="drop(event, 'completed')" ondragover="allowDrop(event)">
                         <div class="column-header column-completed">
                             ✅ Studied
                             <span class="column-count" id="completed-count-col">0</span>
                         </div>
-                        <div id="completed-cards" ondrop="drop(event, 'completed')" ondragover="allowDrop(event)">
+                        <div id="completed-cards">
                             <!-- Cards loaded here -->
                         </div>
                     </div>
@@ -745,6 +765,9 @@ def unified_home():
             card.draggable = true;
             card.id = 'article-' + article.id;
             
+            // Add drag event handler
+            card.addEventListener('dragstart', drag);
+            
             const title = article.title || 'Untitled';
             const truncatedTitle = title.length > 40 ? title.substring(0, 40) + '...' : title;
             const wordCount = article.word_count || 0;
@@ -770,10 +793,9 @@ def unified_home():
             
             card.innerHTML = `
                 <div class="card-title" title="${title}">
-                    <a href="${article.url}" target="_blank" style="color: inherit; text-decoration: none;" 
-                       onclick="event.stopPropagation()">
+                    <span class="card-link" data-url="${article.url}" style="color: inherit; cursor: pointer;">
                         ${truncatedTitle}
-                    </a>
+                    </span>
                 </div>
                 <div class="card-meta">
                     📊 ${wordCount} words · ⏱️ ${readingTime} min
@@ -792,8 +814,23 @@ def unified_home():
                 </div>
             `;
             
-            // Add drag event handler after setting innerHTML
+            // Add drag event handlers
             card.addEventListener('dragstart', drag);
+            card.addEventListener('dragend', function(e) {
+                e.target.classList.remove('dragging');
+            });
+            
+            // Add click handler for the link (but only on double-click to avoid conflict with drag)
+            const linkElement = card.querySelector('.card-link');
+            if (linkElement) {
+                linkElement.addEventListener('dblclick', function(e) {
+                    e.stopPropagation();
+                    window.open(this.dataset.url, '_blank');
+                });
+                
+                // Add tooltip to show double-click instruction
+                linkElement.title = linkElement.title + ' (double-click to open)';
+            }
             
             const container = document.getElementById(article.stage + '-cards');
             if (container) {
@@ -894,16 +931,51 @@ def unified_home():
         // Drag and Drop
         function allowDrop(ev) {
             ev.preventDefault();
+            ev.dataTransfer.dropEffect = "move";
+            
+            // Add visual feedback to column
+            const column = ev.currentTarget;
+            if (column.classList.contains('kanban-column')) {
+                column.classList.add('drag-over');
+            }
         }
+        
+        // Add event listeners for drag leave to remove visual feedback
+        document.addEventListener('DOMContentLoaded', function() {
+            const columns = document.querySelectorAll('.kanban-column');
+            columns.forEach(column => {
+                column.addEventListener('dragleave', function(e) {
+                    if (e.currentTarget === column) {
+                        column.classList.remove('drag-over');
+                    }
+                });
+                column.addEventListener('drop', function(e) {
+                    column.classList.remove('drag-over');
+                });
+            });
+        });
         
         function drag(ev) {
             ev.dataTransfer.setData("text", ev.target.id);
+            ev.dataTransfer.effectAllowed = "move";
+            ev.target.classList.add('dragging');
         }
         
         function drop(ev, newStage) {
             ev.preventDefault();
+            ev.stopPropagation();
+            
+            // Remove visual feedback
+            document.querySelectorAll('.kanban-column').forEach(col => {
+                col.classList.remove('drag-over');
+            });
+            
             const data = ev.dataTransfer.getData("text");
             const element = document.getElementById(data);
+            
+            if (!element) return;
+            
+            element.classList.remove('dragging');
             const articleId = parseInt(data.replace('article-', ''));
             
             // Get the correct container for the new stage
@@ -975,7 +1047,7 @@ def get_articles():
             cursor = conn.cursor()
             cursor.execute('''
                 SELECT id, url, title, stage, word_count, reading_time, total_study_time,
-                       category, sentiment, difficulty, quality_score, topics
+                       category, difficulty, topics
                 FROM articles_kanban
                 WHERE is_archived = 0
                 ORDER BY id DESC
@@ -988,18 +1060,19 @@ def get_articles():
                     'url': row['url'],
                     'title': row['title'],
                     'stage': row['stage'],
-                    'word_count': row['word_count'],
-                    'reading_time': row['reading_time'],
-                    'total_study_time': row['total_study_time'],
-                    'category': row['category'] if 'category' in row.keys() else 'Other',
-                    'sentiment': row['sentiment'] if 'sentiment' in row.keys() else 'neutral',
-                    'difficulty': row['difficulty'] if 'difficulty' in row.keys() else 'intermediate',
-                    'quality_score': row['quality_score'] if 'quality_score' in row.keys() else 0,
-                    'topics': row['topics'] if 'topics' in row.keys() else ''
+                    'word_count': row['word_count'] or 0,
+                    'reading_time': row['reading_time'] or 0,
+                    'total_study_time': row['total_study_time'] or 0,
+                    'category': row['category'] or 'Other',
+                    'sentiment': 'neutral',  # Default since column doesn't exist
+                    'difficulty': row['difficulty'] or 'intermediate',
+                    'quality_score': 0,  # Default since column doesn't exist
+                    'topics': row['topics'] or ''
                 })
             
             return jsonify({'articles': articles})
-    except:
+    except Exception as e:
+        print(f"Kanban DB error: {e}")
         # Fallback to main DB
         with closing(get_db()) as conn:
             cursor = conn.cursor()
