@@ -166,15 +166,9 @@ def unified_home():
         
         /* Main Container */
         .main-container {
-            max-width: 1800px;  /* Increased for better desktop utilization */
+            max-width: 1400px;
             margin: 20px auto;
-            padding: 0 30px;
-        }
-        
-        @media (min-width: 1920px) {
-            .main-container {
-                max-width: 90%;  /* Use 90% of ultra-wide screens */
-            }
+            padding: 0 20px;
         }
         
         /* Tab Content */
@@ -188,28 +182,7 @@ def unified_home():
         
         /* Dashboard Grid */
         .dashboard-grid {
-            display: grid;
-            grid-template-columns: 3fr 1fr;  /* More space for Kanban */
-            gap: 25px;
             margin-bottom: 20px;
-        }
-        
-        @media (min-width: 1920px) {
-            .dashboard-grid {
-                grid-template-columns: 4fr 1fr;  /* Even more for ultra-wide */
-            }
-        }
-        
-        @media (max-width: 1400px) {
-            .dashboard-grid {
-                grid-template-columns: 2fr 1fr;  /* Standard desktop */
-            }
-        }
-        
-        @media (max-width: 1024px) {
-            .dashboard-grid {
-                grid-template-columns: 1fr;
-            }
         }
         
         /* Kanban Section */
@@ -232,28 +205,19 @@ def unified_home():
         .kanban-columns {
             display: grid;
             grid-template-columns: repeat(4, 1fr);
-            gap: 20px;
-            min-height: 600px;  /* Taller for desktop */
-        }
-        
-        @media (min-width: 1920px) {
-            .kanban-columns {
-                gap: 25px;
-                min-height: 700px;
-            }
+            gap: 15px;
+            min-height: 400px;
         }
         
         @media (max-width: 1200px) {
             .kanban-columns {
                 grid-template-columns: repeat(2, 1fr);
-                min-height: 500px;
             }
         }
         
         @media (max-width: 768px) {
             .kanban-columns {
                 grid-template-columns: 1fr;
-                min-height: 400px;
             }
         }
         
@@ -289,12 +253,11 @@ def unified_home():
         .article-card {
             background: white;
             border-radius: 10px;
-            padding: 15px;  /* More padding for desktop */
-            margin-bottom: 12px;
+            padding: 12px;
+            margin-bottom: 10px;
             cursor: move;
             transition: all 0.3s;
             border-left: 4px solid;
-            min-height: 80px;  /* Minimum height for better visibility */
         }
         
         .article-card:hover {
@@ -309,30 +272,16 @@ def unified_home():
         
         .card-title {
             font-weight: 600;
-            font-size: 0.95em;  /* Slightly larger for desktop */
-            margin-bottom: 8px;
+            font-size: 0.9em;
+            margin-bottom: 5px;
             overflow: hidden;
             text-overflow: ellipsis;
             white-space: nowrap;
-            line-height: 1.4;
         }
         
         .card-meta {
-            font-size: 0.8em;  /* Slightly larger for desktop */
+            font-size: 0.75em;
             color: #666;
-            display: flex;
-            gap: 15px;
-            align-items: center;
-        }
-        
-        @media (min-width: 1400px) {
-            .card-title {
-                font-size: 1em;
-                white-space: normal;  /* Allow wrapping on larger screens */
-                display: -webkit-box;
-                -webkit-line-clamp: 2;
-                -webkit-box-orient: vertical;
-            }
         }
         
         /* Logs Section */
@@ -341,20 +290,9 @@ def unified_home():
             border-radius: 15px;
             padding: 20px;
             box-shadow: 0 2px 10px rgba(0,0,0,0.05);
-            height: 600px;  /* Fixed height for desktop */
+            max-height: 500px;
             overflow-y: auto;
-        }
-        
-        @media (max-width: 1400px) {
-            .logs-section {
-                height: 500px;
-            }
-        }
-        
-        @media (max-width: 1024px) {
-            .logs-section {
-                max-height: 400px;
-            }
+            margin-top: 20px;
         }
         
         .logs-header {
@@ -429,15 +367,9 @@ def unified_home():
         /* Quick Stats */
         .quick-stats {
             display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
-            gap: 20px;
-            margin-bottom: 25px;
-        }
-        
-        @media (min-width: 1400px) {
-            .quick-stats {
-                grid-template-columns: repeat(4, 1fr);  /* Fixed 4 columns on desktop */
-            }
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 15px;
+            margin-bottom: 20px;
         }
         
         .stat-card {
@@ -487,39 +419,6 @@ def unified_home():
             }
         }
         
-        /* Desktop Sidebar (for large screens) */
-        @media (min-width: 1600px) {
-            .main-container {
-                display: grid;
-                grid-template-columns: 1fr 300px;
-                gap: 30px;
-            }
-            
-            .sidebar {
-                display: block !important;
-            }
-        }
-        
-        .sidebar {
-            display: none;
-            position: sticky;
-            top: 90px;
-            height: fit-content;
-        }
-        
-        .sidebar-widget {
-            background: white;
-            border-radius: 15px;
-            padding: 20px;
-            margin-bottom: 20px;
-            box-shadow: 0 2px 10px rgba(0,0,0,0.05);
-        }
-        
-        .sidebar-widget h4 {
-            margin-bottom: 15px;
-            color: var(--primary);
-            font-size: 1.1em;
-        }
         
         .activity-item {
             display: flex;
@@ -646,9 +545,6 @@ def unified_home():
     <!-- Main Container -->
     <div class="main-container">
         
-        <!-- Main Content -->
-        <div class="main-content">
-        
         <!-- Dashboard Tab -->
         <div id="dashboard" class="tab-content active">
             <!-- Quick Stats -->
@@ -675,68 +571,50 @@ def unified_home():
                 </div>
             </div>
             
-            <!-- Dashboard Grid -->
-            <div class="dashboard-grid">
-                <!-- Kanban Section -->
-                <div class="kanban-section">
-                    <div class="kanban-header">
-                        <h2>📋 Study Progress</h2>
-                        <button onclick="showTab('kanban')" style="padding: 8px 16px; background: var(--primary); color: white; border: none; border-radius: 20px; cursor: pointer;">
-                            View Full Board →
-                        </button>
-                    </div>
-                    <div class="kanban-columns">
-                        <div class="kanban-column">
-                            <div class="column-header column-inbox">
-                                📥 Inbox
-                                <span class="column-count" id="inbox-count">0</span>
-                            </div>
-                            <div id="inbox-cards" ondrop="drop(event, 'inbox')" ondragover="allowDrop(event)">
-                                <!-- Cards loaded here -->
-                            </div>
-                        </div>
-                        <div class="kanban-column">
-                            <div class="column-header column-reading">
-                                📖 Reading
-                                <span class="column-count" id="reading-count-col">0</span>
-                            </div>
-                            <div id="reading-cards" ondrop="drop(event, 'reading')" ondragover="allowDrop(event)">
-                                <!-- Cards loaded here -->
-                            </div>
-                        </div>
-                        <div class="kanban-column">
-                            <div class="column-header column-reviewing">
-                                🔍 Reviewing
-                                <span class="column-count" id="reviewing-count">0</span>
-                            </div>
-                            <div id="reviewing-cards" ondrop="drop(event, 'reviewing')" ondragover="allowDrop(event)">
-                                <!-- Cards loaded here -->
-                            </div>
-                        </div>
-                        <div class="kanban-column">
-                            <div class="column-header column-completed">
-                                ✅ Studied
-                                <span class="column-count" id="completed-count-col">0</span>
-                            </div>
-                            <div id="completed-cards" ondrop="drop(event, 'completed')" ondragover="allowDrop(event)">
-                                <!-- Cards loaded here -->
-                            </div>
-                        </div>
-                    </div>
+            <!-- Kanban Section -->
+            <div class="kanban-section">
+                <div class="kanban-header">
+                    <h2>📋 Study Progress</h2>
+                    <button onclick="showTab('kanban')" style="padding: 8px 16px; background: var(--primary); color: white; border: none; border-radius: 20px; cursor: pointer;">
+                        View Full Board →
+                    </button>
                 </div>
-                
-                <!-- Logs Section -->
-                <div class="logs-section">
-                    <div class="logs-header">
-                        <h3>📜 Live Activity Log</h3>
-                        <div class="log-filters">
-                            <button class="log-filter active" onclick="filterLogs('all')">All</button>
-                            <button class="log-filter" onclick="filterLogs('error')">Errors</button>
-                            <button class="log-filter" onclick="filterLogs('success')">Success</button>
+                <div class="kanban-columns">
+                    <div class="kanban-column">
+                        <div class="column-header column-inbox">
+                            📥 Inbox
+                            <span class="column-count" id="inbox-count">0</span>
+                        </div>
+                        <div id="inbox-cards" ondrop="drop(event, 'inbox')" ondragover="allowDrop(event)">
+                            <!-- Cards loaded here -->
                         </div>
                     </div>
-                    <div class="log-entries" id="log-entries">
-                        <!-- Logs loaded here -->
+                    <div class="kanban-column">
+                        <div class="column-header column-reading">
+                            📖 Reading
+                            <span class="column-count" id="reading-count-col">0</span>
+                        </div>
+                        <div id="reading-cards" ondrop="drop(event, 'reading')" ondragover="allowDrop(event)">
+                            <!-- Cards loaded here -->
+                        </div>
+                    </div>
+                    <div class="kanban-column">
+                        <div class="column-header column-reviewing">
+                            🔍 Reviewing
+                            <span class="column-count" id="reviewing-count">0</span>
+                        </div>
+                        <div id="reviewing-cards" ondrop="drop(event, 'reviewing')" ondragover="allowDrop(event)">
+                            <!-- Cards loaded here -->
+                        </div>
+                    </div>
+                    <div class="kanban-column">
+                        <div class="column-header column-completed">
+                            ✅ Studied
+                            <span class="column-count" id="completed-count-col">0</span>
+                        </div>
+                        <div id="completed-cards" ondrop="drop(event, 'completed')" ondragover="allowDrop(event)">
+                            <!-- Cards loaded here -->
+                        </div>
                     </div>
                 </div>
             </div>
@@ -773,70 +651,6 @@ def unified_home():
             <h2>⚙️ Settings</h2>
             <p>Configuration options here...</p>
         </div>
-        
-        </div> <!-- End main-content -->
-        
-        <!-- Sidebar for desktop -->
-        <div class="sidebar">
-            <div class="sidebar-widget">
-                <h4>📌 Quick Actions</h4>
-                <button onclick="addArticle()" style="width: 100%; padding: 10px; background: var(--primary); color: white; border: none; border-radius: 8px; cursor: pointer; margin-bottom: 10px;">
-                    ➕ Add Article
-                </button>
-                <button onclick="refreshData()" style="width: 100%; padding: 10px; background: var(--secondary); color: white; border: none; border-radius: 8px; cursor: pointer;">
-                    🔄 Refresh All
-                </button>
-            </div>
-            
-            <div class="sidebar-widget">
-                <h4>📊 Today's Progress</h4>
-                <div style="display: flex; justify-content: space-between; margin-bottom: 10px;">
-                    <span>Articles Read</span>
-                    <strong id="sidebar-read-today">0</strong>
-                </div>
-                <div style="display: flex; justify-content: space-between; margin-bottom: 10px;">
-                    <span>Study Time</span>
-                    <strong id="sidebar-time-today">0h</strong>
-                </div>
-                <div style="display: flex; justify-content: space-between;">
-                    <span>Completed</span>
-                    <strong id="sidebar-completed-today">0</strong>
-                </div>
-            </div>
-            
-            <div class="sidebar-widget">
-                <h4>🎯 Study Goals</h4>
-                <div style="margin-bottom: 15px;">
-                    <div style="display: flex; justify-content: space-between; margin-bottom: 5px;">
-                        <span>Daily Goal</span>
-                        <span>2/5 articles</span>
-                    </div>
-                    <div style="background: #e0e0e0; height: 8px; border-radius: 4px; overflow: hidden;">
-                        <div style="background: var(--success); width: 40%; height: 100%;"></div>
-                    </div>
-                </div>
-                <div>
-                    <div style="display: flex; justify-content: space-between; margin-bottom: 5px;">
-                        <span>Weekly Goal</span>
-                        <span>12/20 articles</span>
-                    </div>
-                    <div style="background: #e0e0e0; height: 8px; border-radius: 4px; overflow: hidden;">
-                        <div style="background: var(--info); width: 60%; height: 100%;"></div>
-                    </div>
-                </div>
-            </div>
-            
-            <div class="sidebar-widget">
-                <h4>🔥 Study Streak</h4>
-                <div style="text-align: center; font-size: 2em; color: var(--warning); margin: 10px 0;">
-                    3 Days
-                </div>
-                <p style="text-align: center; color: #666; font-size: 0.9em;">
-                    Keep it up! 🎉
-                </p>
-            </div>
-        </div>
-        
     </div>
     
     <!-- Action Buttons -->
@@ -930,26 +744,29 @@ def unified_home():
             card.className = 'article-card card-' + article.stage;
             card.draggable = true;
             card.id = 'article-' + article.id;
-            card.ondragstart = (e) => drag(e);
             
             const title = article.title || 'Untitled';
-            // Longer titles on desktop
-            const maxLength = window.innerWidth > 1400 ? 60 : 40;
-            const truncatedTitle = title.length > maxLength ? title.substring(0, maxLength) + '...' : title;
+            const truncatedTitle = title.length > 40 ? title.substring(0, 40) + '...' : title;
             const wordCount = article.word_count || 0;
             const readingTime = article.reading_time || Math.max(1, Math.floor(wordCount / 200));
             
-            // Extract domain from URL for display
-            let domain = '';
-            try {
-                const url = new URL(article.url);
-                domain = url.hostname.replace('www.', '');
-            } catch (e) {
-                domain = 'article';
-            }
+            // AI insights
+            const category = article.category || 'Other';
+            const difficulty = article.difficulty || 'intermediate';
+            const sentiment = article.sentiment || 'neutral';
+            const qualityScore = article.quality_score || 0;
             
-            // Add date if available
-            const addedDate = article.added_date ? new Date(article.added_date).toLocaleDateString() : '';
+            // Difficulty color
+            const diffColor = {
+                'elementary': '#4CAF50',
+                'intermediate': '#FF9800',
+                'advanced': '#F44336',
+                'expert': '#9C27B0'
+            }[difficulty] || '#757575';
+            
+            // Sentiment emoji
+            const sentimentEmoji = sentiment.includes('positive') ? '😊' : 
+                                  sentiment.includes('negative') ? '😟' : '😐';
             
             card.innerHTML = `
                 <div class="card-title" title="${title}">
@@ -959,11 +776,24 @@ def unified_home():
                     </a>
                 </div>
                 <div class="card-meta">
-                    <span>📊 ${wordCount} words</span>
-                    <span>⏱️ ${readingTime} min</span>
-                    ${window.innerWidth > 1400 && domain ? `<span>🌐 ${domain}</span>` : ''}
+                    📊 ${wordCount} words · ⏱️ ${readingTime} min
+                </div>
+                <div class="card-ai" style="margin-top: 8px; padding-top: 8px; border-top: 1px solid #eee; font-size: 0.7em;">
+                    <span style="background: #e3f2fd; color: #1976d2; padding: 2px 6px; border-radius: 3px; margin-right: 5px;">
+                        ${category}
+                    </span>
+                    <span style="background: ${diffColor}22; color: ${diffColor}; padding: 2px 6px; border-radius: 3px; margin-right: 5px;">
+                        ${difficulty}
+                    </span>
+                    <span title="Sentiment: ${sentiment}">
+                        ${sentimentEmoji}
+                    </span>
+                    ${qualityScore > 0 ? `<span style="float: right; color: #666;">⭐ ${qualityScore}/100</span>` : ''}
                 </div>
             `;
+            
+            // Add drag event handler after setting innerHTML
+            card.addEventListener('dragstart', drag);
             
             const container = document.getElementById(article.stage + '-cards');
             if (container) {
@@ -1138,13 +968,14 @@ def unified_home():
 
 @app.route('/api/articles')
 def get_articles():
-    """Get articles for Kanban"""
+    """Get articles for Kanban with AI insights"""
     try:
         # Try Kanban DB first
         with closing(get_db(KANBAN_DB_PATH)) as conn:
             cursor = conn.cursor()
             cursor.execute('''
-                SELECT id, url, title, stage, word_count, reading_time, total_study_time
+                SELECT id, url, title, stage, word_count, reading_time, total_study_time,
+                       category, sentiment, difficulty, quality_score, topics
                 FROM articles_kanban
                 WHERE is_archived = 0
                 ORDER BY id DESC
@@ -1159,7 +990,12 @@ def get_articles():
                     'stage': row['stage'],
                     'word_count': row['word_count'],
                     'reading_time': row['reading_time'],
-                    'total_study_time': row['total_study_time']
+                    'total_study_time': row['total_study_time'],
+                    'category': row['category'] if 'category' in row.keys() else 'Other',
+                    'sentiment': row['sentiment'] if 'sentiment' in row.keys() else 'neutral',
+                    'difficulty': row['difficulty'] if 'difficulty' in row.keys() else 'intermediate',
+                    'quality_score': row['quality_score'] if 'quality_score' in row.keys() else 0,
+                    'topics': row['topics'] if 'topics' in row.keys() else ''
                 })
             
             return jsonify({'articles': articles})

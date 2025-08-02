@@ -78,7 +78,8 @@ def extract_article_info(url):
             'title': title or url.split('/')[-1] or 'Untitled',
             'summary': summary or '',
             'word_count': words,
-            'reading_time': max(1, words // 200)  # Assume 200 words per minute
+            'reading_time': max(1, words // 200),  # Assume 200 words per minute
+            'text': text[:3000]  # First 3000 chars for AI analysis
         }
     except Exception as e:
         logger.error(f"Error extracting article info: {e}")
@@ -87,11 +88,60 @@ def extract_article_info(url):
             'title': url.split('/')[-2] if '/' in url else 'Article',
             'summary': '',
             'word_count': 0,
-            'reading_time': 5
+            'reading_time': 5,
+            'text': ''
         }
 
+def analyze_article_with_ai(text, title=""):
+    """Analyze article with AI for enhanced insights (5x features)"""
+    try:
+        from openai import OpenAI
+        import os
+        
+        # Check if OpenAI API key is available
+        api_key = os.getenv('OPENAI_API_KEY')
+        if not api_key:
+            return None
+            
+        client = OpenAI(api_key=api_key)
+        
+        prompt = f"""Analyze this article and provide comprehensive insights:
+Title: {title}
+Content: {text[:2000]}
+
+Provide analysis in JSON format with these 5 categories:
+1. "summary": Brief 2-3 sentence summary
+2. "category": Main category (Technology/Business/Health/Science/Entertainment/Politics/Sports/Other)
+3. "sentiment": Overall sentiment (positive/neutral/negative) with score 0-100
+4. "difficulty": Reading difficulty (elementary/intermediate/advanced/expert)
+5. "key_insights": List of 3-5 main takeaways
+6. "topics": List of main topics/keywords (5-10 items)
+7. "target_audience": Who would benefit most from this article
+8. "quality_score": Article quality 0-100 based on clarity, depth, accuracy
+9. "action_items": Practical things reader can do after reading
+10. "related_concepts": Concepts reader should explore next"""
+
+        response = client.chat.completions.create(
+            model="gpt-3.5-turbo",
+            messages=[
+                {"role": "system", "content": "You are an expert content analyst. Respond only with valid JSON."},
+                {"role": "user", "content": prompt}
+            ],
+            temperature=0.7,
+            max_tokens=500
+        )
+        
+        import json
+        result = json.loads(response.choices[0].message.content)
+        logger.info(f"✅ AI analysis completed for: {title}")
+        return result
+        
+    except Exception as e:
+        logger.error(f"AI analysis error: {e}")
+        return None
+
 def save_article_to_kanban(url, title="", summary=""):
-    """Save article to Kanban database"""
+    """Save article to Kanban database with AI analysis"""
     url_hash = hashlib.md5(url.encode()).hexdigest()
     
     # Extract article info if not provided
@@ -101,9 +151,14 @@ def save_article_to_kanban(url, title="", summary=""):
         summary = summary or article_info['summary']
         word_count = article_info['word_count']
         reading_time = article_info['reading_time']
+        text = article_info.get('text', '')
     else:
         word_count = len(summary.split()) if summary else 0
         reading_time = max(1, word_count // 200)
+        text = summary
+    
+    # Perform AI analysis
+    ai_analysis = analyze_article_with_ai(text, title) if text else None
     
     try:
         with closing(get_db(KANBAN_DB_PATH)) as conn:
@@ -116,19 +171,51 @@ def save_article_to_kanban(url, title="", summary=""):
             if existing:
                 return {'status': 'duplicate', 'id': existing[0]}
             
-            # Insert new article with more data
+            # Prepare AI analysis data
+            if ai_analysis:
+                ai_summary = ai_analysis.get('summary', summary)[:500]
+                category = ai_analysis.get('category', 'Other')
+                sentiment = f"{ai_analysis.get('sentiment', 'neutral')}"
+                difficulty = ai_analysis.get('difficulty', 'intermediate')
+                key_insights = ', '.join(ai_analysis.get('key_insights', []))[:500]
+                topics = ', '.join(ai_analysis.get('topics', []))[:200]
+                quality_score = ai_analysis.get('quality_score', 0)
+            else:
+                ai_summary = summary[:500]
+                category = 'Other'
+                sentiment = 'neutral'
+                difficulty = 'intermediate'
+                key_insights = ''
+                topics = ''
+                quality_score = 0
+            
+            # Insert new article with AI analysis
             cursor.execute('''
                 INSERT INTO articles_kanban (
                     url, url_hash, title, summary, word_count, reading_time,
-                    stage, added_date
-                ) VALUES (?, ?, ?, ?, ?, ?, 'inbox', CURRENT_TIMESTAMP)
-            ''', (url, url_hash, title[:200], summary[:500], word_count, reading_time))
+                    stage, added_date, category, sentiment, difficulty,
+                    key_insights, topics, quality_score
+                ) VALUES (?, ?, ?, ?, ?, ?, 'inbox', CURRENT_TIMESTAMP, ?, ?, ?, ?, ?, ?)
+            ''', (url, url_hash, title[:200], ai_summary, word_count, reading_time,
+                  category, sentiment, difficulty, key_insights, topics, quality_score))
             
             conn.commit()
             article_id = cursor.lastrowid
             
             logger.info(f"✅ Article saved to Kanban: {title}")
-            return {'status': 'saved', 'id': article_id, 'title': title}
+            return {
+                'status': 'saved', 
+                'id': article_id, 
+                'title': title,
+                'ai_analysis': ai_analysis or {
+                    'summary': ai_summary,
+                    'category': category,
+                    'sentiment': sentiment,
+                    'difficulty': difficulty,
+                    'topics': topics,
+                    'quality_score': quality_score
+                }
+            }
             
     except Exception as e:
         logger.error(f"Database error: {str(e)}")
@@ -209,18 +296,26 @@ def handle_message(event):
             result = save_article_to_kanban(url)
             
             if result['status'] == 'saved':
-                reply_text = f"""✅ Article Saved!
+                # Get AI insights if available
+                ai_info = result.get('ai_analysis', {})
+                
+                reply_text = f"""✅ Article Saved & Analyzed!
 
-📚 {url[:50]}...
+📚 {result.get('title', 'Article')[:50]}...
 
-The article has been added to your Inbox in the Kanban board.
+🤖 AI Insights:
+• Category: {ai_info.get('category', 'Other')}
+• Difficulty: {ai_info.get('difficulty', 'intermediate')}
+• Sentiment: {ai_info.get('sentiment', 'neutral')}
+• Quality: {ai_info.get('quality_score', 0)}/100
 
-📋 Next steps:
-• Visit dashboard to review
-• Move to "Reading" when you start
-• Add study notes as you learn
+📝 Summary:
+{ai_info.get('summary', 'Article saved to your reading list.')[:200]}
 
-View dashboard: https://aa4fe2493ae1.ngrok-free.app"""
+📋 Key Topics:
+{ai_info.get('topics', 'General content')}
+
+View full analysis: https://aa4fe2493ae1.ngrok-free.app"""
                 
             elif result['status'] == 'duplicate':
                 reply_text = "📚 This article is already in your collection!"
@@ -229,21 +324,30 @@ View dashboard: https://aa4fe2493ae1.ngrok-free.app"""
                 reply_text = f"❌ Error saving article: {result.get('message', 'Unknown error')}"
         
         elif text.lower() == '/help':
-            reply_text = """🧠 Article Intelligence Bot
+            reply_text = """🧠 Article Intelligence Bot (5x AI Enhanced)
 
 📝 Commands:
-• Send any URL - Save & analyze article
+• Send any URL - Save & AI analyze article
 • /help - Show this message
-• /list - Recent articles
+• /list - Recent articles with AI insights
 • /stats - Your statistics
+• /ai - Show AI analysis for recent article
+• /summary - Today's progress summary
+
+🤖 AI Features (5x Enhanced):
+• Smart summarization
+• Category classification
+• Sentiment analysis
+• Reading difficulty assessment
+• Key insights extraction
+• Topic identification
+• Quality scoring
+• Target audience detection
+• Action items generation
+• Related concepts suggestion
 
 📊 Dashboard:
-https://aa4fe2493ae1.ngrok-free.app
-
-✨ Features:
-• AI-powered analysis
-• Kanban board tracking
-• Study progress monitoring"""
+https://aa4fe2493ae1.ngrok-free.app"""
         
         elif text.lower() == '/stats':
             # Get statistics
@@ -319,6 +423,44 @@ Today's Progress:"""
 Keep up the great learning! 💪"""
             except:
                 reply_text = "📊 Unable to generate summary"
+        
+        elif text.lower() == '/ai':
+            # Show AI analysis for most recent article
+            try:
+                with closing(get_db(KANBAN_DB_PATH)) as conn:
+                    cursor = conn.cursor()
+                    cursor.execute('''
+                        SELECT title, category, sentiment, difficulty, 
+                               key_insights, topics, quality_score, summary
+                        FROM articles_kanban 
+                        ORDER BY added_date DESC 
+                        LIMIT 1
+                    ''')
+                    article = cursor.fetchone()
+                    
+                    if article:
+                        reply_text = f"""🤖 AI Analysis - Latest Article
+
+📚 {article['title'][:50]}...
+
+📊 Analysis:
+• Category: {article['category']}
+• Difficulty: {article['difficulty']}
+• Sentiment: {article['sentiment']}
+• Quality Score: {article['quality_score']}/100
+
+📝 Summary:
+{article['summary'][:300]}...
+
+🔑 Key Insights:
+{article['key_insights'][:200]}
+
+#️⃣ Topics:
+{article['topics']}"""
+                    else:
+                        reply_text = "No articles found. Send me a URL to analyze!"
+            except:
+                reply_text = "Unable to retrieve AI analysis"
         
         elif text.lower() == '/list':
             # List recent articles
@@ -410,9 +552,25 @@ if __name__ == '__main__':
                     url_hash TEXT UNIQUE,
                     title TEXT,
                     summary TEXT,
+                    word_count INTEGER DEFAULT 0,
+                    reading_time INTEGER DEFAULT 0,
                     stage TEXT DEFAULT 'inbox',
                     added_date TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-                    is_archived BOOLEAN DEFAULT 0
+                    is_archived BOOLEAN DEFAULT 0,
+                    category TEXT DEFAULT 'Other',
+                    sentiment TEXT DEFAULT 'neutral',
+                    difficulty TEXT DEFAULT 'intermediate',
+                    key_insights TEXT,
+                    topics TEXT,
+                    quality_score INTEGER DEFAULT 0,
+                    target_audience TEXT,
+                    action_items TEXT,
+                    related_concepts TEXT,
+                    priority TEXT DEFAULT 'medium',
+                    study_notes TEXT,
+                    key_learnings TEXT,
+                    total_study_time INTEGER DEFAULT 0,
+                    stage_updated TIMESTAMP
                 )
             ''')
             conn.commit()
