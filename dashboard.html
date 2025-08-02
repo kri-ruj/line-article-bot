@@ -1,0 +1,371 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Article Intelligence Dashboard</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body { 
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 20px;
+        }
+        .container { max-width: 1400px; margin: 0 auto; }
+        .header {
+            background: white;
+            border-radius: 20px;
+            padding: 30px;
+            margin-bottom: 20px;
+            box-shadow: 0 10px 40px rgba(0,0,0,0.1);
+        }
+        h1 { color: #764ba2; margin-bottom: 10px; }
+        .tabs {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 20px;
+            flex-wrap: wrap;
+        }
+        .tab {
+            padding: 12px 24px;
+            background: white;
+            border: 2px solid #667eea;
+            border-radius: 30px;
+            cursor: pointer;
+            transition: all 0.3s;
+            font-weight: 500;
+        }
+        .tab:hover { background: #667eea; color: white; }
+        .tab.active { background: #764ba2; color: white; border-color: #764ba2; }
+        .content {
+            background: white;
+            border-radius: 20px;
+            padding: 30px;
+            box-shadow: 0 10px 40px rgba(0,0,0,0.1);
+            min-height: 500px;
+        }
+        .article-card {
+            background: #f8f9fa;
+            border-radius: 15px;
+            padding: 20px;
+            margin-bottom: 20px;
+            border-left: 5px solid #667eea;
+        }
+        .article-title { font-size: 1.2em; font-weight: bold; color: #333; margin-bottom: 10px; }
+        .article-url { color: #667eea; text-decoration: none; font-size: 0.9em; }
+        .article-meta { margin: 10px 0; color: #666; }
+        .article-summary { margin: 15px 0; line-height: 1.6; }
+        .tags { display: flex; flex-wrap: wrap; gap: 8px; margin: 10px 0; }
+        .tag {
+            background: #667eea;
+            color: white;
+            padding: 4px 12px;
+            border-radius: 15px;
+            font-size: 0.85em;
+        }
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 20px;
+            margin-bottom: 30px;
+        }
+        .stat-card {
+            background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
+            color: white;
+            padding: 20px;
+            border-radius: 15px;
+            text-align: center;
+        }
+        .stat-value { font-size: 2.5em; font-weight: bold; }
+        .stat-label { margin-top: 5px; opacity: 0.9; }
+        .log-viewer {
+            background: #1e1e1e;
+            color: #d4d4d4;
+            padding: 20px;
+            border-radius: 10px;
+            font-family: 'Courier New', monospace;
+            font-size: 0.9em;
+            max-height: 500px;
+            overflow-y: auto;
+        }
+        .log-line { margin: 2px 0; padding: 2px; }
+        .log-info { color: #4EC9B0; }
+        .log-error { color: #f48771; background: rgba(244, 135, 113, 0.1); }
+        .log-success { color: #4CAF50; }
+        .log-warning { color: #FFA726; }
+        .hidden { display: none; }
+        .search-box {
+            width: 100%;
+            padding: 12px 20px;
+            border: 2px solid #667eea;
+            border-radius: 30px;
+            font-size: 1em;
+            margin-bottom: 20px;
+        }
+        .empty-state {
+            text-align: center;
+            padding: 60px 20px;
+            color: #999;
+        }
+        .empty-state h3 { color: #666; margin-bottom: 10px; }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>🧠 Article Intelligence Dashboard</h1>
+            <p>Your AI-powered article collection and analysis system</p>
+        </div>
+
+        <div class="tabs">
+            <div class="tab active" onclick="showTab('summary')">📚 Summary</div>
+            <div class="tab" onclick="showTab('articles')">📄 Articles</div>
+            <div class="tab" onclick="showTab('logs')">📜 Logs</div>
+            <div class="tab" onclick="showTab('stats')">📊 Statistics</div>
+            <div class="tab" onclick="showTab('api')">🔌 API</div>
+        </div>
+
+        <div class="content">
+            <!-- Summary Tab -->
+            <div id="summary" class="tab-content">
+                <h2>📚 Collection Overview</h2>
+                <div class="stats-grid">
+                    <div class="stat-card">
+                        <div class="stat-value">4</div>
+                        <div class="stat-label">Total Articles</div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-value">10,912</div>
+                        <div class="stat-label">Words Analyzed</div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-value">3</div>
+                        <div class="stat-label">Categories</div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-value">5,456</div>
+                        <div class="stat-label">Avg. Words</div>
+                    </div>
+                </div>
+
+                <h3>Recent Articles</h3>
+                <div class="article-card">
+                    <div class="article-title">SoccerSuck - Football News</div>
+                    <a href="https://soccersuck.com/" class="article-url">https://soccersuck.com/</a>
+                    <div class="article-meta">📅 2025-08-02 | 📊 7,757 words | ⏱️ 38 min read</div>
+                    <div class="article-summary">
+                        The article provides updates on various football-related news, including player transfers, 
+                        match results, and league standings. It covers recent developments in the football world.
+                    </div>
+                    <div class="tags">
+                        <span class="tag">Sports</span>
+                        <span class="tag">Neutral Sentiment</span>
+                        <span class="tag">Player Transfers</span>
+                        <span class="tag">Match Results</span>
+                    </div>
+                </div>
+
+                <div class="article-card">
+                    <div class="article-title">GitHub - potpie-ai/potpie</div>
+                    <a href="https://github.com/potpie-ai/potpie" class="article-url">https://github.com/potpie-ai/potpie</a>
+                    <div class="article-meta">📅 2025-08-02 | 📊 3,155 words | ⏱️ 15 min read</div>
+                    <div class="article-summary">
+                        Potpie is an open-source platform that creates AI agents specialized in codebases, 
+                        enabling automated code analysis, testing, and development tasks.
+                    </div>
+                    <div class="tags">
+                        <span class="tag">Technology</span>
+                        <span class="tag">Positive Sentiment</span>
+                        <span class="tag">AI Agents</span>
+                        <span class="tag">Code Analysis</span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Articles Tab -->
+            <div id="articles" class="tab-content hidden">
+                <h2>📄 All Articles</h2>
+                <input type="text" class="search-box" placeholder="Search articles..." onkeyup="searchArticles(this.value)">
+                
+                <div id="articles-list">
+                    <div class="article-card">
+                        <div class="article-title">1. SoccerSuck</div>
+                        <a href="https://soccersuck.com/">https://soccersuck.com/</a>
+                        <div class="article-meta">Category: Sports | Sentiment: Neutral | 7,757 words</div>
+                        <div class="tags">
+                            <span class="tag">Player transfers</span>
+                            <span class="tag">Match results</span>
+                            <span class="tag">League standings</span>
+                        </div>
+                    </div>
+                    
+                    <div class="article-card">
+                        <div class="article-title">2. GitHub Potpie AI</div>
+                        <a href="https://github.com/potpie-ai/potpie">https://github.com/potpie-ai/potpie</a>
+                        <div class="article-meta">Category: Technology | Sentiment: Positive | 3,155 words</div>
+                        <div class="tags">
+                            <span class="tag">AI agents</span>
+                            <span class="tag">Code analysis</span>
+                            <span class="tag">Automated testing</span>
+                        </div>
+                    </div>
+                    
+                    <div class="article-card">
+                        <div class="article-title">3. ngrok Dashboard</div>
+                        <a href="https://6623ee01e26c.ngrok-free.app/">https://6623ee01e26c.ngrok-free.app/</a>
+                        <div class="article-meta">Category: General | No content extracted</div>
+                    </div>
+                    
+                    <div class="article-card">
+                        <div class="article-title">4. LINE Developers Console</div>
+                        <a href="https://developers.line.biz/console/">https://developers.line.biz/console/</a>
+                        <div class="article-meta">Category: General | No content extracted</div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Logs Tab -->
+            <div id="logs" class="tab-content hidden">
+                <h2>📜 System Logs</h2>
+                <div class="log-viewer">
+                    <div class="log-line log-success">✅ 2025-08-02 21:12:48 - Ultra AI analysis completed for: SoccerSuck</div>
+                    <div class="log-line log-info">ℹ️ 2025-08-02 21:12:43 - Running AI analysis for: https://www.soccersuck.com/</div>
+                    <div class="log-line log-success">✅ 2025-08-02 21:12:42 - Reply sent successfully</div>
+                    <div class="log-line log-info">ℹ️ 2025-08-02 21:12:42 - Processing URL: https://www.soccersuck.com/</div>
+                    <div class="log-line log-error">❌ 2025-08-02 21:12:48 - Database error: 77 values for 78 columns (fixing...)</div>
+                    <div class="log-line log-warning">⚠️ 2025-08-02 21:12:49 - Failed to send reply: Invalid reply token</div>
+                    <div class="log-line log-success">✅ 2025-08-02 20:49:40 - OpenAI client initialized</div>
+                    <div class="log-line log-success">✅ 2025-08-02 20:49:40 - Ultra-enhanced database initialized</div>
+                    <div class="log-line log-info">ℹ️ 2025-08-02 20:49:40 - Server starting on http://localhost:5001</div>
+                    <div class="log-line log-info">ℹ️ 2025-08-02 20:37:08 - AI analysis completed for: SoccerSuck</div>
+                    <div class="log-line log-success">✅ 2025-08-02 20:37:08 - Article saved to database</div>
+                    <div class="log-line log-info">ℹ️ 2025-08-02 13:27:00 - Processing GitHub potpie repository</div>
+                    <div class="log-line log-success">✅ 2025-08-02 13:27:00 - GitHub article analyzed and saved</div>
+                </div>
+                <p style="margin-top: 20px; color: #666;">
+                    📁 Log files location: <code>/Users/bright/Bright2ndbrain/line-article-bot/</code><br>
+                    • server.log - Main server activity<br>
+                    • ultra_server.log - Enhanced server with AI processing
+                </p>
+            </div>
+
+            <!-- Statistics Tab -->
+            <div id="stats" class="tab-content hidden">
+                <h2>📊 Collection Statistics</h2>
+                
+                <h3>Category Distribution</h3>
+                <div class="stats-grid">
+                    <div class="stat-card">
+                        <div class="stat-value">2</div>
+                        <div class="stat-label">General</div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-value">1</div>
+                        <div class="stat-label">Sports</div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-value">1</div>
+                        <div class="stat-label">Technology</div>
+                    </div>
+                </div>
+
+                <h3>Content Metrics</h3>
+                <ul style="line-height: 2; margin-left: 20px;">
+                    <li>📚 Total Words: 10,912</li>
+                    <li>📖 Average Article Length: 5,456 words</li>
+                    <li>📏 Longest Article: 7,757 words (SoccerSuck)</li>
+                    <li>📐 Shortest Article: 3,155 words (GitHub Potpie)</li>
+                    <li>⏱️ Total Reading Time: ~53 minutes</li>
+                    <li>😊 Sentiment: 1 Positive, 1 Neutral, 2 Unknown</li>
+                </ul>
+
+                <h3>Processing Activity</h3>
+                <ul style="line-height: 2; margin-left: 20px;">
+                    <li>🤖 AI Analyses Performed: 4</li>
+                    <li>✅ Successful Saves: 4</li>
+                    <li>🔄 URLs Processed: 6+ (including retries)</li>
+                    <li>📅 Collection Started: 2025-08-02</li>
+                </ul>
+            </div>
+
+            <!-- API Tab -->
+            <div id="api" class="tab-content hidden">
+                <h2>🔌 API Endpoints</h2>
+                <p>Access your data programmatically:</p>
+                
+                <h3>Available Endpoints</h3>
+                <ul style="line-height: 2.5; margin-left: 20px;">
+                    <li>
+                        <strong>GET /</strong> - Dashboard homepage<br>
+                        <code>curl https://6623ee01e26c.ngrok-free.app/</code>
+                    </li>
+                    <li>
+                        <strong>GET /api/topics</strong> - Topic analysis<br>
+                        <code>curl https://6623ee01e26c.ngrok-free.app/api/topics</code>
+                    </li>
+                    <li>
+                        <strong>GET /api/insights</strong> - AI insights<br>
+                        <code>curl https://6623ee01e26c.ngrok-free.app/api/insights</code>
+                    </li>
+                    <li>
+                        <strong>GET /api/graph</strong> - Knowledge graph<br>
+                        <code>curl https://6623ee01e26c.ngrok-free.app/api/graph</code>
+                    </li>
+                    <li>
+                        <strong>POST /callback</strong> - LINE webhook<br>
+                        Send URLs via LINE bot for processing
+                    </li>
+                </ul>
+
+                <h3>Data Export Files</h3>
+                <ul style="line-height: 2; margin-left: 20px;">
+                    <li>📄 <strong>data_export.json</strong> - Complete structured data</li>
+                    <li>📊 <strong>data_export.csv</strong> - Spreadsheet format</li>
+                    <li>📚 <strong>articles_enhanced.db</strong> - SQLite database</li>
+                </ul>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        function showTab(tabName) {
+            // Hide all tabs
+            document.querySelectorAll('.tab-content').forEach(content => {
+                content.classList.add('hidden');
+            });
+            
+            // Remove active class from all tabs
+            document.querySelectorAll('.tab').forEach(tab => {
+                tab.classList.remove('active');
+            });
+            
+            // Show selected tab
+            document.getElementById(tabName).classList.remove('hidden');
+            
+            // Add active class to clicked tab
+            event.target.classList.add('active');
+        }
+
+        function searchArticles(query) {
+            const articles = document.querySelectorAll('#articles-list .article-card');
+            articles.forEach(article => {
+                const text = article.textContent.toLowerCase();
+                if (text.includes(query.toLowerCase())) {
+                    article.style.display = 'block';
+                } else {
+                    article.style.display = 'none';
+                }
+            });
+        }
+
+        // Auto-refresh logs every 5 seconds
+        setInterval(() => {
+            if (!document.getElementById('logs').classList.contains('hidden')) {
+                console.log('Refreshing logs...');
+                // In real implementation, fetch new logs via API
+            }
+        }, 5000);
+    </script>
+</body>
+</html>

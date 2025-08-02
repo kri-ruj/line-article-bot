@@ -1,0 +1,6 @@
+id,url,title,category,subcategory,sentiment,sentiment_score,mood,complexity,topics_count,topics,people,organizations,technologies,key_points_count,word_count,reading_time,saved_at
+1,https://github.com/potpie-ai/potpie,GitHub - potpie-ai/potpie: Prompt-To-Agent : Create custom engineering agents for your codebase,Technology,Software Development,positive,0.8,informative,intermediate,4,"AI agents, code analysis, automated testing",,Potpie,"VSCode, Slack",3,3155,15,2025-08-02 13:27:00
+2,https://developers.line.biz/console/channel/2005624063/messaging-api,LINE Developers,General,,,0.0,,,0,,,,,0,0,1,2025-08-02 13:27:18
+3,https://6623ee01e26c.ngrok-free.app/,6623ee01e26c.ngrok-free.app,General,,,0.0,,,0,,,,,0,0,1,2025-08-02 13:34:58
+4,https://soccersuck.com/,"
+		#### ได้รู้ความจริง ได้ยิ่งกว่าฟุตบอล อ่าน soccersuck.com####	",Sports,Football,Neutral,0.0,Casual,Beginner,6,"Player transfers, Match results, League standings","Arsene Wenger, Lionel Messi, Cristiano Ronaldo","Liverpool, Arsenal, Manchester City",,3,7757,38,2025-08-02 13:37:08

@@ -80,13 +80,20 @@ def health_check():
 
 @app.route('/callback', methods=['POST'])
 def callback():
-    return jsonify({
-        "error": "LINE webhook not configured. Running in demo mode.",
-        "help": "Please configure LINE credentials in .env file"
-    }), 503
+    # Get the signature from LINE (if present)
+    signature = request.headers.get('X-Line-Signature', '')
+    body = request.get_data(as_text=True)
+    
+    # Log the webhook call
+    logger.info(f"Received webhook call in demo mode")
+    logger.info(f"Body: {body[:100]}...")  # Log first 100 chars
+    
+    # In demo mode, we just return OK without signature verification
+    # This allows LINE to verify the webhook endpoint
+    return 'OK', 200
 
 if __name__ == "__main__":
-    port = int(os.environ.get('PORT', 5000))
+    port = int(os.environ.get('PORT', 5001))
     print("\n" + "="*60)
     print("LINE ARTICLE BOT - DEMO MODE")
     print("="*60)
