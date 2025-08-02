@@ -639,6 +639,51 @@ def unified_home():
                 </div>
             </div>
             
+            <!-- AI Insights Section -->
+            <div class="ai-insights-section" style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; border-radius: 15px; padding: 20px; margin-bottom: 20px;">
+                <h3 style="color: white;">🤖 AI Intelligence Dashboard</h3>
+                <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 15px; margin-top: 15px;">
+                    <div class="ai-stat-card" style="background: rgba(255,255,255,0.2); padding: 15px; border-radius: 10px; text-align: center;">
+                        <div style="font-size: 2em;">📊</div>
+                        <div style="font-size: 0.85em; opacity: 0.9;">Completion Rate</div>
+                        <div id="ai-completion-rate" style="font-size: 1.5em; font-weight: bold;">--%</div>
+                    </div>
+                    <div class="ai-stat-card" style="background: rgba(255,255,255,0.2); padding: 15px; border-radius: 10px; text-align: center;">
+                        <div style="font-size: 2em;">🔍</div>
+                        <div style="font-size: 0.85em; opacity: 0.9;">Similar Articles</div>
+                        <div id="ai-similar-count" style="font-size: 1.5em; font-weight: bold;">0</div>
+                    </div>
+                    <div class="ai-stat-card" style="background: rgba(255,255,255,0.2); padding: 15px; border-radius: 10px; text-align: center;">
+                        <div style="font-size: 2em;">🏷️</div>
+                        <div style="font-size: 0.85em; opacity: 0.9;">Auto Tags</div>
+                        <div id="ai-tags-generated" style="font-size: 1.5em; font-weight: bold;">Active</div>
+                    </div>
+                    <div class="ai-stat-card" style="background: rgba(255,255,255,0.2); padding: 15px; border-radius: 10px; text-align: center;">
+                        <div style="font-size: 2em;">💡</div>
+                        <div style="font-size: 0.85em; opacity: 0.9;">Smart Priority</div>
+                        <div id="ai-priority-status" style="font-size: 1.5em; font-weight: bold;">ON</div>
+                    </div>
+                </div>
+                
+                <!-- Similar Articles Warning -->
+                <div id="similar-articles-warning" style="margin-top: 15px; padding: 10px; background: rgba(255,193,7,0.2); border-radius: 8px; display: none;">
+                    <strong>⚠️ Duplicate Alert:</strong> <span id="similar-articles-text"></span>
+                </div>
+                
+                <!-- AI Actions -->
+                <div style="display: flex; gap: 10px; margin-top: 15px; flex-wrap: wrap;">
+                    <button onclick="showAIPriority()" style="padding: 8px 16px; background: rgba(255,255,255,0.3); color: white; border: 1px solid rgba(255,255,255,0.5); border-radius: 20px; cursor: pointer; font-size: 0.85em;">
+                        📊 View Priority Ranking
+                    </button>
+                    <button onclick="generateAllNotes()" style="padding: 8px 16px; background: rgba(255,255,255,0.3); color: white; border: 1px solid rgba(255,255,255,0.5); border-radius: 20px; cursor: pointer; font-size: 0.85em;">
+                        📝 Generate Study Notes
+                    </button>
+                    <button onclick="showRecommendations()" style="padding: 8px 16px; background: rgba(255,255,255,0.3); color: white; border: 1px solid rgba(255,255,255,0.5); border-radius: 20px; cursor: pointer; font-size: 0.85em;">
+                        💡 Smart Recommendations
+                    </button>
+                </div>
+            </div>
+            
             <!-- Recent Activity -->
             <div class="activity-section">
                 <h3>🕐 Recent Activity</h3>
@@ -663,7 +708,90 @@ def unified_home():
         <!-- Analytics Tab -->
         <div id="analytics" class="tab-content">
             <h2>📈 Analytics & Insights</h2>
-            <p>Charts and analytics here...</p>
+            
+            <!-- Analytics Dashboard -->
+            <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 20px; margin-top: 20px;">
+                <!-- Reading Progress Chart -->
+                <div style="background: white; border-radius: 15px; padding: 20px; box-shadow: 0 2px 10px rgba(0,0,0,0.05);">
+                    <h3 style="margin-bottom: 15px;">📊 Reading Progress</h3>
+                    <canvas id="progressChart" width="300" height="200"></canvas>
+                </div>
+                
+                <!-- Category Distribution -->
+                <div style="background: white; border-radius: 15px; padding: 20px; box-shadow: 0 2px 10px rgba(0,0,0,0.05);">
+                    <h3 style="margin-bottom: 15px;">📂 Category Distribution</h3>
+                    <canvas id="categoryChart" width="300" height="200"></canvas>
+                </div>
+                
+                <!-- Reading Velocity -->
+                <div style="background: white; border-radius: 15px; padding: 20px; box-shadow: 0 2px 10px rgba(0,0,0,0.05);">
+                    <h3 style="margin-bottom: 15px;">⚡ Weekly Velocity</h3>
+                    <div id="velocity-stats">
+                        <div style="text-align: center; padding: 40px;">
+                            <div style="font-size: 3em; font-weight: bold; color: #667eea;" id="weekly-velocity">0</div>
+                            <div style="color: #666;">Articles per Week</div>
+                            <div style="margin-top: 20px; color: #999; font-size: 0.9em;">
+                                Average Reading Time: <span id="avg-reading-time">0</span> min
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- AI Insights Summary -->
+                <div style="background: linear-gradient(135deg, #667eea, #764ba2); color: white; border-radius: 15px; padding: 20px; box-shadow: 0 2px 10px rgba(0,0,0,0.05);">
+                    <h3 style="color: white; margin-bottom: 15px;">🤖 AI Insights</h3>
+                    <div id="ai-insights-summary">
+                        <div style="margin-bottom: 10px;">
+                            <strong>Top Category:</strong> <span id="top-category">Loading...</span>
+                        </div>
+                        <div style="margin-bottom: 10px;">
+                            <strong>Reading Efficiency:</strong> <span id="reading-efficiency">0%</span>
+                        </div>
+                        <div style="margin-bottom: 10px;">
+                            <strong>Recommended Focus:</strong> <span id="recommended-focus">Loading...</span>
+                        </div>
+                        <div>
+                            <strong>Next Goal:</strong> <span id="next-goal">Loading...</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Detailed Stats Table -->
+            <div style="background: white; border-radius: 15px; padding: 20px; margin-top: 20px; box-shadow: 0 2px 10px rgba(0,0,0,0.05);">
+                <h3>📋 Detailed Statistics</h3>
+                <table style="width: 100%; margin-top: 15px;">
+                    <thead>
+                        <tr style="border-bottom: 2px solid #f0f0f0;">
+                            <th style="text-align: left; padding: 10px;">Metric</th>
+                            <th style="text-align: right; padding: 10px;">Value</th>
+                            <th style="text-align: right; padding: 10px;">Trend</th>
+                        </tr>
+                    </thead>
+                    <tbody id="stats-table">
+                        <tr>
+                            <td style="padding: 10px;">Total Articles</td>
+                            <td style="text-align: right; padding: 10px;" id="stat-total">0</td>
+                            <td style="text-align: right; padding: 10px;">-</td>
+                        </tr>
+                        <tr style="background: #f8f9fa;">
+                            <td style="padding: 10px;">Completion Rate</td>
+                            <td style="text-align: right; padding: 10px;" id="stat-completion">0%</td>
+                            <td style="text-align: right; padding: 10px;">📈</td>
+                        </tr>
+                        <tr>
+                            <td style="padding: 10px;">Study Hours</td>
+                            <td style="text-align: right; padding: 10px;" id="stat-hours">0</td>
+                            <td style="text-align: right; padding: 10px;">📈</td>
+                        </tr>
+                        <tr style="background: #f8f9fa;">
+                            <td style="padding: 10px;">Articles This Week</td>
+                            <td style="text-align: right; padding: 10px;" id="stat-weekly">0</td>
+                            <td style="text-align: right; padding: 10px;">-</td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
         </div>
         
         <!-- Settings Tab -->
@@ -687,17 +815,50 @@ def unified_home():
         let articles = {};
         let currentFilter = 'all';
         
+        // Load AI Features
+        function loadAIInsights() {
+            // Load analytics
+            fetch('/api/ai/analytics')
+                .then(response => response.json())
+                .then(data => {
+                    // Update completion rate
+                    const completionRate = data.completion_rate || 0;
+                    document.getElementById('ai-completion-rate').textContent = Math.round(completionRate) + '%';
+                })
+                .catch(error => console.error('Error loading AI analytics:', error));
+            
+            // Check for similar articles
+            fetch('/api/ai/similar-articles')
+                .then(response => response.json())
+                .then(data => {
+                    const similarCount = data.similar_articles ? data.similar_articles.length : 0;
+                    document.getElementById('ai-similar-count').textContent = similarCount;
+                    
+                    if (similarCount > 0) {
+                        const warning = document.getElementById('similar-articles-warning');
+                        const text = document.getElementById('similar-articles-text');
+                        text.textContent = `Found ${similarCount} potentially duplicate articles in your collection`;
+                        warning.style.display = 'block';
+                    }
+                })
+                .catch(error => console.error('Error checking similar articles:', error));
+        }
+        
         // Initialize
         window.onload = function() {
             loadArticles();
             loadLogs();
             loadActivity();
+            loadAIInsights();
             
             // Auto-refresh logs every 3 seconds
             setInterval(loadLogs, 3000);
             
             // Auto-refresh articles every 10 seconds
             setInterval(loadArticles, 10000);
+            
+            // Auto-refresh AI insights every 30 seconds
+            setInterval(loadAIInsights, 30000);
         };
         
         // Tab Navigation
@@ -717,6 +878,184 @@ def unified_home():
             
             // Mark nav link as active
             event.target.classList.add('active');
+            
+            // Load analytics if analytics tab
+            if (tabName === 'analytics') {
+                loadAnalyticsCharts();
+            }
+        }
+        
+        // Load Analytics Charts
+        function loadAnalyticsCharts() {
+            // Fetch analytics data
+            fetch('/api/ai/analytics')
+                .then(response => response.json())
+                .then(data => {
+                    // Update velocity stats
+                    document.getElementById('weekly-velocity').textContent = data.weekly_velocity || 0;
+                    document.getElementById('avg-reading-time').textContent = data.avg_reading_time || 0;
+                    
+                    // Update detailed stats
+                    document.getElementById('stat-total').textContent = data.total_articles || 0;
+                    document.getElementById('stat-completion').textContent = (data.completion_rate || 0) + '%';
+                    document.getElementById('stat-hours').textContent = Math.round((data.avg_reading_time || 0) * (data.total_articles || 0) / 60);
+                    document.getElementById('stat-weekly').textContent = data.weekly_velocity || 0;
+                    
+                    // Draw progress chart
+                    drawProgressChart(data.stage_distribution || {});
+                    
+                    // Draw category chart
+                    drawCategoryChart(data.category_distribution || {});
+                    
+                    // Update AI insights
+                    updateAIInsightsSummary(data);
+                })
+                .catch(error => {
+                    console.error('Error loading analytics:', error);
+                });
+        }
+        
+        // Draw Progress Chart (Donut)
+        function drawProgressChart(stageData) {
+            const canvas = document.getElementById('progressChart');
+            if (!canvas) return;
+            
+            const ctx = canvas.getContext('2d');
+            const width = canvas.width;
+            const height = canvas.height;
+            const centerX = width / 2;
+            const centerY = height / 2;
+            const radius = Math.min(width, height) / 3;
+            
+            // Clear canvas
+            ctx.clearRect(0, 0, width, height);
+            
+            // Data
+            const stages = ['inbox', 'reading', 'reviewing', 'completed'];
+            const colors = ['#FFA726', '#42A5F5', '#AB47BC', '#66BB6A'];
+            const total = Object.values(stageData).reduce((a, b) => a + b, 0) || 1;
+            
+            let currentAngle = -Math.PI / 2;
+            
+            stages.forEach((stage, index) => {
+                const value = stageData[stage] || 0;
+                const sliceAngle = (value / total) * 2 * Math.PI;
+                
+                // Draw slice
+                ctx.beginPath();
+                ctx.arc(centerX, centerY, radius, currentAngle, currentAngle + sliceAngle);
+                ctx.lineTo(centerX, centerY);
+                ctx.fillStyle = colors[index];
+                ctx.fill();
+                
+                // Draw label
+                if (value > 0) {
+                    const labelAngle = currentAngle + sliceAngle / 2;
+                    const labelX = centerX + Math.cos(labelAngle) * (radius * 0.7);
+                    const labelY = centerY + Math.sin(labelAngle) * (radius * 0.7);
+                    
+                    ctx.fillStyle = 'white';
+                    ctx.font = 'bold 12px sans-serif';
+                    ctx.textAlign = 'center';
+                    ctx.textBaseline = 'middle';
+                    ctx.fillText(value, labelX, labelY);
+                }
+                
+                currentAngle += sliceAngle;
+            });
+            
+            // Draw center hole for donut
+            ctx.beginPath();
+            ctx.arc(centerX, centerY, radius * 0.4, 0, 2 * Math.PI);
+            ctx.fillStyle = 'white';
+            ctx.fill();
+            
+            // Draw legend
+            ctx.font = '10px sans-serif';
+            stages.forEach((stage, index) => {
+                const legendY = height - 30 + (index % 2) * 15;
+                const legendX = 10 + Math.floor(index / 2) * 80;
+                
+                ctx.fillStyle = colors[index];
+                ctx.fillRect(legendX, legendY, 10, 10);
+                
+                ctx.fillStyle = '#333';
+                ctx.textAlign = 'left';
+                ctx.fillText(stage, legendX + 15, legendY + 8);
+            });
+        }
+        
+        // Draw Category Chart (Bar)
+        function drawCategoryChart(categoryData) {
+            const canvas = document.getElementById('categoryChart');
+            if (!canvas) return;
+            
+            const ctx = canvas.getContext('2d');
+            const width = canvas.width;
+            const height = canvas.height;
+            
+            // Clear canvas
+            ctx.clearRect(0, 0, width, height);
+            
+            const categories = Object.keys(categoryData).slice(0, 5);
+            const values = categories.map(cat => categoryData[cat]);
+            const maxValue = Math.max(...values, 1);
+            
+            const barWidth = (width - 40) / categories.length;
+            const chartHeight = height - 60;
+            
+            categories.forEach((category, index) => {
+                const value = values[index];
+                const barHeight = (value / maxValue) * chartHeight;
+                const x = 20 + index * barWidth;
+                const y = height - 40 - barHeight;
+                
+                // Draw bar
+                ctx.fillStyle = `hsl(${index * 60}, 70%, 60%)`;
+                ctx.fillRect(x + barWidth * 0.1, y, barWidth * 0.8, barHeight);
+                
+                // Draw value
+                ctx.fillStyle = '#333';
+                ctx.font = 'bold 12px sans-serif';
+                ctx.textAlign = 'center';
+                ctx.fillText(value, x + barWidth / 2, y - 5);
+                
+                // Draw label
+                ctx.save();
+                ctx.translate(x + barWidth / 2, height - 35);
+                ctx.rotate(-Math.PI / 6);
+                ctx.font = '10px sans-serif';
+                ctx.textAlign = 'right';
+                ctx.fillText(category.substring(0, 10), 0, 0);
+                ctx.restore();
+            });
+        }
+        
+        // Update AI Insights Summary
+        function updateAIInsightsSummary(data) {
+            // Find top category
+            const categories = data.category_distribution || {};
+            const topCat = Object.keys(categories).reduce((a, b) => 
+                categories[a] > categories[b] ? a : b, 'None');
+            document.getElementById('top-category').textContent = topCat;
+            
+            // Calculate efficiency
+            const efficiency = data.completion_rate || 0;
+            document.getElementById('reading-efficiency').textContent = 
+                efficiency > 70 ? 'Excellent' : efficiency > 40 ? 'Good' : 'Needs Improvement';
+            
+            // Recommended focus
+            const inbox = data.stage_distribution?.inbox || 0;
+            const reading = data.stage_distribution?.reading || 0;
+            let focus = 'Start new articles';
+            if (reading > 3) focus = 'Complete current reads';
+            else if (inbox > 10) focus = 'Clear inbox backlog';
+            document.getElementById('recommended-focus').textContent = focus;
+            
+            // Next goal
+            const completed = data.stage_distribution?.completed || 0;
+            const nextMilestone = Math.ceil((completed + 1) / 10) * 10;
+            document.getElementById('next-goal').textContent = `Reach ${nextMilestone} completed articles`;
         }
         
         // Load Articles for Kanban
@@ -1027,11 +1366,160 @@ def unified_home():
             loadArticles();
             loadLogs();
             loadActivity();
+            loadAIInsights();
         }
         
         function addArticle() {
             // Implement add article modal
             alert('Add article feature coming soon!');
+        }
+        
+        // AI Priority Ranking
+        function showAIPriority() {
+            const modal = document.createElement('div');
+            modal.className = 'modal show';
+            modal.innerHTML = `
+                <div class="modal-content" style="background: white; border-radius: 20px; width: 90%; max-width: 800px; max-height: 90vh; overflow-y: auto;">
+                    <div class="modal-header" style="background: linear-gradient(135deg, #667eea, #764ba2); color: white; padding: 20px; border-radius: 20px 20px 0 0; display: flex; justify-content: space-between;">
+                        <h2>📊 AI Priority Ranking</h2>
+                        <button onclick="this.closest('.modal').remove()" style="background: none; border: none; color: white; font-size: 1.5em; cursor: pointer;">&times;</button>
+                    </div>
+                    <div class="modal-body" style="padding: 20px;">
+                        <div id="priority-loading" style="text-align: center; padding: 40px;">
+                            <div class="loading"></div>
+                            <p>Analyzing articles...</p>
+                        </div>
+                        <div id="priority-list" style="display: none;"></div>
+                    </div>
+                </div>
+            `;
+            document.body.appendChild(modal);
+            
+            // Load priority ranking
+            fetch('/api/ai/priority-ranking')
+                .then(response => response.json())
+                .then(data => {
+                    const list = document.getElementById('priority-list');
+                    if (data.ranked_articles && data.ranked_articles.length > 0) {
+                        list.innerHTML = data.ranked_articles.map((article, index) => {
+                            const score = Math.round(article.priority_score || 0);
+                            const borderColor = score >= 70 ? '#66BB6A' : score >= 40 ? '#FFA726' : '#EF5350';
+                            return `
+                                <div style="background: #f8f9fa; border-radius: 12px; padding: 15px; margin-bottom: 10px; border-left: 4px solid ${borderColor};">
+                                    <div style="display: flex; align-items: center;">
+                                        <div style="width: 40px; height: 40px; background: linear-gradient(135deg, #667eea, #764ba2); color: white; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-weight: bold; margin-right: 15px;">
+                                            ${index + 1}
+                                        </div>
+                                        <div style="flex: 1;">
+                                            <div style="font-weight: 600;">${article.title || 'Untitled'}</div>
+                                            <div style="font-size: 0.85em; color: #666;">
+                                                📂 ${article.category || 'Other'} · 📋 ${article.stage} · ⏱️ ${article.reading_time || 'N/A'} min
+                                            </div>
+                                        </div>
+                                        <div style="font-size: 1.2em; font-weight: bold; color: #667eea;">${score}/100</div>
+                                    </div>
+                                </div>
+                            `;
+                        }).join('');
+                    } else {
+                        list.innerHTML = '<p style="text-align: center; color: #999;">No articles to prioritize</p>';
+                    }
+                    document.getElementById('priority-loading').style.display = 'none';
+                    document.getElementById('priority-list').style.display = 'block';
+                })
+                .catch(error => {
+                    console.error('Error loading priority:', error);
+                    document.getElementById('priority-list').innerHTML = '<p style="color: #EF5350;">Error loading rankings</p>';
+                    document.getElementById('priority-loading').style.display = 'none';
+                    document.getElementById('priority-list').style.display = 'block';
+                });
+        }
+        
+        // Generate All Notes
+        function generateAllNotes() {
+            if (!confirm('Generate study notes for all incomplete articles? This may take a moment.')) return;
+            
+            const incomplete = Object.values(articles).filter(a => a.stage !== 'completed');
+            if (incomplete.length === 0) {
+                alert('No incomplete articles found');
+                return;
+            }
+            
+            alert(`Generating notes for ${incomplete.length} articles...`);
+            let completed = 0;
+            
+            incomplete.forEach(article => {
+                fetch(`/api/ai/study-notes/${article.id}`)
+                    .then(response => response.json())
+                    .then(data => {
+                        completed++;
+                        if (completed === incomplete.length) {
+                            alert('Study notes generated successfully!');
+                            document.getElementById('ai-notes-generated').textContent = completed;
+                        }
+                    })
+                    .catch(error => console.error(`Error generating notes for ${article.title}:`, error));
+            });
+        }
+        
+        // Show Recommendations
+        function showRecommendations() {
+            const firstArticle = Object.values(articles)[0];
+            if (!firstArticle) {
+                alert('No articles available for recommendations');
+                return;
+            }
+            
+            const modal = document.createElement('div');
+            modal.className = 'modal show';
+            modal.innerHTML = `
+                <div class="modal-content" style="background: white; border-radius: 20px; width: 90%; max-width: 800px; max-height: 90vh; overflow-y: auto;">
+                    <div class="modal-header" style="background: linear-gradient(135deg, #667eea, #764ba2); color: white; padding: 20px; border-radius: 20px 20px 0 0; display: flex; justify-content: space-between;">
+                        <h2>💡 Smart Recommendations</h2>
+                        <button onclick="this.closest('.modal').remove()" style="background: none; border: none; color: white; font-size: 1.5em; cursor: pointer;">&times;</button>
+                    </div>
+                    <div class="modal-body" style="padding: 20px;">
+                        <div id="rec-loading" style="text-align: center; padding: 40px;">
+                            <div class="loading"></div>
+                            <p>Finding recommendations...</p>
+                        </div>
+                        <div id="rec-content" style="display: none;"></div>
+                    </div>
+                </div>
+            `;
+            document.body.appendChild(modal);
+            
+            fetch(`/api/ai/recommendations/${firstArticle.id}`)
+                .then(response => response.json())
+                .then(data => {
+                    const content = document.getElementById('rec-content');
+                    if (data.recommendations && data.recommendations.length > 0) {
+                        content.innerHTML = `
+                            <p style="margin-bottom: 20px;">Based on: <strong>${firstArticle.title}</strong></p>
+                            ${data.recommendations.map(rec => `
+                                <div style="background: #f8f9fa; padding: 15px; border-radius: 12px; margin-bottom: 10px; border-left: 4px solid #667eea;">
+                                    <h4 style="margin: 0 0 5px 0;">${rec.title}</h4>
+                                    <p style="color: #666; font-size: 0.85em;">
+                                        📂 ${rec.category} · Match: ${Math.round(rec.similarity_score * 100)}%
+                                    </p>
+                                    <p style="color: #667eea; font-size: 0.85em;">
+                                        💡 ${rec.reason}
+                                    </p>
+                                </div>
+                            `).join('')}
+                        `;
+                    } else {
+                        content.innerHTML = '<p style="text-align: center; color: #999;">No recommendations available</p>';
+                    }
+                    document.getElementById('rec-loading').style.display = 'none';
+                    document.getElementById('rec-content').style.display = 'block';
+                })
+                .catch(error => {
+                    console.error('Error loading recommendations:', error);
+                    document.getElementById('rec-content').innerHTML = '<p style="color: #EF5350;">Error loading recommendations</p>';
+                    document.getElementById('rec-loading').style.display = 'none';
+                    document.getElementById('rec-content').style.display = 'block';
+                });
         }
     </script>
 </body>
@@ -1127,6 +1615,163 @@ def get_activity():
     ]
     
     return jsonify({'activities': activities})
+
+# Import AI features
+try:
+    from ai_features import ai_features
+    AI_FEATURES_AVAILABLE = True
+except ImportError:
+    AI_FEATURES_AVAILABLE = False
+    print("AI features not available")
+
+@app.route('/api/ai/recommendations/<int:article_id>')
+def get_recommendations(article_id):
+    """Get AI recommendations for an article"""
+    if not AI_FEATURES_AVAILABLE:
+        return jsonify({'error': 'AI features not available'}), 503
+    
+    try:
+        recommendations = ai_features.get_article_recommendations(article_id)
+        return jsonify({'recommendations': recommendations})
+    except Exception as e:
+        return jsonify({'error': str(e)}), 500
+
+@app.route('/api/ai/similar-articles')
+def get_similar_articles():
+    """Get similar/duplicate articles"""
+    if not AI_FEATURES_AVAILABLE:
+        return jsonify({'error': 'AI features not available'}), 503
+    
+    try:
+        similar_pairs = ai_features.detect_similar_articles(threshold=0.7)
+        return jsonify({'similar_articles': [
+            {
+                'article1': pair[0],
+                'article2': pair[1],
+                'similarity': pair[2]
+            } for pair in similar_pairs[:10]  # Limit to top 10
+        ]})
+    except Exception as e:
+        return jsonify({'error': str(e)}), 500
+
+@app.route('/api/ai/analytics')
+def get_reading_analytics():
+    """Get reading analytics"""
+    if not AI_FEATURES_AVAILABLE:
+        return jsonify({'error': 'AI features not available'}), 503
+    
+    try:
+        analytics = ai_features.get_reading_analytics()
+        return jsonify(analytics)
+    except Exception as e:
+        return jsonify({'error': str(e)}), 500
+
+@app.route('/api/ai/generate-tags', methods=['POST'])
+def generate_tags():
+    """Generate tags for text"""
+    if not AI_FEATURES_AVAILABLE:
+        return jsonify({'error': 'AI features not available'}), 503
+    
+    try:
+        data = request.json
+        text = data.get('text', '')
+        title = data.get('title', '')
+        tags = ai_features.generate_auto_tags(text, title)
+        return jsonify({'tags': tags})
+    except Exception as e:
+        return jsonify({'error': str(e)}), 500
+
+@app.route('/api/ai/priority-ranking')
+def get_priority_ranking():
+    """Get articles ranked by AI priority"""
+    if not AI_FEATURES_AVAILABLE:
+        return jsonify({'error': 'AI features not available'}), 503
+    
+    try:
+        with closing(get_db(KANBAN_DB_PATH)) as conn:
+            cursor = conn.cursor()
+            cursor.execute('''
+                SELECT id, url, title, summary, category, reading_time, 
+                       stage, added_date
+                FROM articles_kanban
+                WHERE is_archived = 0 AND stage != 'completed'
+                ORDER BY added_date DESC
+            ''')
+            articles = cursor.fetchall()
+            
+            # Calculate priority for each article
+            ranked_articles = []
+            for article in articles:
+                article_dict = dict(article)
+                article_dict['quality_score'] = 0  # Default since column doesn't exist
+                priority_score = ai_features.calculate_priority_score(article_dict)
+                article_dict['priority_score'] = priority_score
+                ranked_articles.append(article_dict)
+            
+            # Sort by priority score
+            ranked_articles.sort(key=lambda x: x['priority_score'], reverse=True)
+            
+            return jsonify({'ranked_articles': ranked_articles[:20]})  # Top 20
+    except Exception as e:
+        return jsonify({'error': str(e)}), 500
+
+@app.route('/api/ai/study-notes/<int:article_id>')
+def generate_study_notes(article_id):
+    """Generate study notes for an article"""
+    if not AI_FEATURES_AVAILABLE:
+        return jsonify({'error': 'AI features not available'}), 503
+    
+    try:
+        with closing(get_db(KANBAN_DB_PATH)) as conn:
+            cursor = conn.cursor()
+            cursor.execute('''
+                SELECT * FROM articles_kanban WHERE id = ?
+            ''', (article_id,))
+            article = cursor.fetchone()
+            
+            if not article:
+                return jsonify({'error': 'Article not found'}), 404
+            
+            article_dict = dict(article)
+            article_dict['quality_score'] = 0  # Default
+            notes = ai_features.generate_study_notes(article_dict)
+            
+            # Save notes to database
+            cursor.execute('''
+                UPDATE articles_kanban
+                SET study_notes = ?
+                WHERE id = ?
+            ''', (notes, article_id))
+            conn.commit()
+            
+            return jsonify({'notes': notes})
+    except Exception as e:
+        return jsonify({'error': str(e)}), 500
+
+@app.route('/api/ai/study-questions/<int:article_id>')
+def generate_study_questions(article_id):
+    """Generate study questions for an article"""
+    if not AI_FEATURES_AVAILABLE:
+        return jsonify({'error': 'AI features not available'}), 503
+    
+    try:
+        with closing(get_db(KANBAN_DB_PATH)) as conn:
+            cursor = conn.cursor()
+            cursor.execute('''
+                SELECT title, summary, extracted_content
+                FROM articles_kanban WHERE id = ?
+            ''', (article_id,))
+            article = cursor.fetchone()
+            
+            if not article:
+                return jsonify({'error': 'Article not found'}), 404
+            
+            content = article['extracted_content'] or article['summary'] or ''
+            questions = ai_features.generate_study_questions(content[:2000], article['title'])
+            
+            return jsonify({'questions': questions})
+    except Exception as e:
+        return jsonify({'error': str(e)}), 500
 
 @app.route('/api/update-stage', methods=['POST'])
 def update_stage():
