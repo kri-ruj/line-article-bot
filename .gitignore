@@ -1,6 +1,10 @@
 # Environment variables
 .env
+.env.*
 .env.local
+.env.production
+.env.development
+.env.staging
 
 # Google credentials
 credentials.json

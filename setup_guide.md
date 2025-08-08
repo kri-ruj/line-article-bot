@@ -120,29 +120,18 @@ Make sure `credentials.json` is in the same folder as `app.py`
 pip install Flask line-bot-sdk beautifulsoup4 requests google-auth google-auth-oauthlib google-auth-httplib2 google-api-python-client python-dotenv gunicorn
 ```
 
-### 4.2 Install ngrok (for testing)
-1. Download from: https://ngrok.com/download
-2. Extract and add to PATH
-3. Sign up for free account at ngrok.com
-4. Get your authtoken from dashboard
-5. Run: `ngrok config add-authtoken YOUR_TOKEN`
+### 4.2 Production Deployment
+The bot is deployed on Google Cloud Run:
+- **Production URL**: https://article-hub-959205905728.asia-northeast1.run.app
+- **Webhook URL**: https://article-hub-959205905728.asia-northeast1.run.app/callback
+- **Database**: Google Firestore (permanent storage)
 
-### 4.3 Run the Bot
-```bash
-# Terminal 1: Start Flask app
-python app.py
-
-# Terminal 2: Create tunnel
-ngrok http 5000
-```
-
-### 4.4 Set Webhook URL
-1. Copy the HTTPS URL from ngrok (e.g., `https://abc123.ngrok-free.app`)
-2. Go to LINE Developers Console
-3. In "Messaging API" tab
-4. Set Webhook URL: `https://abc123.ngrok-free.app/callback`
-5. Toggle "Use webhook" to ON
-6. Click "Verify" to test connection
+### 4.3 Set Webhook URL (Already Configured)
+1. Go to LINE Developers Console
+2. In "Messaging API" tab
+3. Webhook URL should be: `https://article-hub-959205905728.asia-northeast1.run.app/callback`
+4. Toggle "Use webhook" to ON
+5. Click "Verify" to test connection
 
 ---
 
@@ -194,9 +183,9 @@ git push heroku main
 ## 🔧 Troubleshooting
 
 ### Bot doesn't respond
-- Check webhook URL is correct
-- Verify "Use webhook" is ON
-- Check ngrok is running
+- Check webhook URL is correct: https://article-hub-959205905728.asia-northeast1.run.app/callback
+- Verify "Use webhook" is ON in LINE Developers Console
+- Check Cloud Run logs: `gcloud logging read "resource.type=cloud_run_revision" --limit 20`
 - Look at Flask console for errors
 
 ### Google Sheets error

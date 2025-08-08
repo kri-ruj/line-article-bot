@@ -1,0 +1,189 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Article Hub - Offline</title>
+    <style>
+        body {
+            margin: 0;
+            padding: 0;
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+        
+        .offline-container {
+            background: white;
+            border-radius: 20px;
+            padding: 40px;
+            text-align: center;
+            max-width: 400px;
+            margin: 20px;
+            box-shadow: 0 20px 60px rgba(0,0,0,0.2);
+        }
+        
+        .offline-icon {
+            font-size: 80px;
+            margin-bottom: 20px;
+        }
+        
+        h1 {
+            color: #333;
+            margin-bottom: 10px;
+        }
+        
+        p {
+            color: #666;
+            line-height: 1.6;
+            margin-bottom: 30px;
+        }
+        
+        .offline-articles {
+            text-align: left;
+            margin-top: 30px;
+            padding-top: 20px;
+            border-top: 2px solid #f0f0f0;
+        }
+        
+        .offline-article {
+            background: #f8f9fa;
+            padding: 12px;
+            border-radius: 8px;
+            margin-bottom: 10px;
+            border-left: 3px solid #667eea;
+        }
+        
+        .retry-btn {
+            background: linear-gradient(135deg, #667eea, #764ba2);
+            color: white;
+            border: none;
+            padding: 12px 30px;
+            border-radius: 8px;
+            font-size: 16px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: transform 0.2s;
+        }
+        
+        .retry-btn:hover {
+            transform: translateY(-2px);
+        }
+        
+        .status {
+            display: inline-block;
+            padding: 4px 12px;
+            border-radius: 20px;
+            font-size: 12px;
+            background: #fee2e2;
+            color: #dc2626;
+            margin-top: 20px;
+        }
+        
+        .status.online {
+            background: #dcfce7;
+            color: #16a34a;
+        }
+    </style>
+</head>
+<body>
+    <div class="offline-container">
+        <div class="offline-icon">📴</div>
+        <h1>You're Offline</h1>
+        <p>Don't worry! Your articles are saved locally and will sync when you're back online.</p>
+        
+        <button class="retry-btn" onclick="checkConnection()">
+            Try Again
+        </button>
+        
+        <div class="status" id="status">
+            Offline Mode
+        </div>
+        
+        <div class="offline-articles" id="offlineArticles">
+            <h3>📚 Cached Articles</h3>
+            <div id="cachedList">
+                Loading cached articles...
+            </div>
+        </div>
+    </div>
+    
+    <script>
+        // Check connection status
+        function checkConnection() {
+            fetch('/')
+                .then(() => {
+                    document.getElementById('status').textContent = 'Connected!';
+                    document.getElementById('status').className = 'status online';
+                    setTimeout(() => {
+                        window.location.href = '/';
+                    }, 1000);
+                })
+                .catch(() => {
+                    document.getElementById('status').textContent = 'Still Offline';
+                    document.getElementById('status').className = 'status';
+                });
+        }
+        
+        // Load cached articles from IndexedDB
+        async function loadCachedArticles() {
+            try {
+                const db = await openDB();
+                const transaction = db.transaction(['articles'], 'readonly');
+                const store = transaction.objectStore('articles');
+                const request = store.getAll();
+                
+                request.onsuccess = () => {
+                    const articles = request.result;
+                    const listEl = document.getElementById('cachedList');
+                    
+                    if (articles.length === 0) {
+                        listEl.innerHTML = '<p style="color: #999;">No cached articles yet</p>';
+                    } else {
+                        listEl.innerHTML = articles.map(article => `
+                            <div class="offline-article">
+                                <strong>${article.title || 'Untitled'}</strong><br>
+                                <small style="color: #666;">${article.stage || 'inbox'}</small>
+                            </div>
+                        `).join('');
+                    }
+                };
+            } catch (error) {
+                console.error('Failed to load cached articles:', error);
+                document.getElementById('cachedList').innerHTML = 
+                    '<p style="color: #999;">Unable to load cached articles</p>';
+            }
+        }
+        
+        function openDB() {
+            return new Promise((resolve, reject) => {
+                const request = indexedDB.open('ArticleHubDB', 1);
+                
+                request.onerror = () => reject(request.error);
+                request.onsuccess = () => resolve(request.result);
+                
+                request.onupgradeneeded = event => {
+                    const db = event.target.result;
+                    if (!db.objectStoreNames.contains('articles')) {
+                        db.createObjectStore('articles', { keyPath: 'id' });
+                    }
+                };
+            });
+        }
+        
+        // Check connection every 5 seconds
+        setInterval(checkConnection, 5000);
+        
+        // Load cached articles on page load
+        loadCachedArticles();
+        
+        // Listen for online event
+        window.addEventListener('online', () => {
+            checkConnection();
+        });
+    </script>
+</body>
+</html>

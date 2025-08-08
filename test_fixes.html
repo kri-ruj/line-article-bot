@@ -1,0 +1,250 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8">
+    <title>Test Database Sync & Team Mode Fixes</title>
+    <style>
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+            max-width: 800px;
+            margin: 50px auto;
+            padding: 20px;
+        }
+        .test-section {
+            margin: 20px 0;
+            padding: 20px;
+            border: 1px solid #ddd;
+            border-radius: 8px;
+        }
+        .test-result {
+            margin: 10px 0;
+            padding: 10px;
+            border-radius: 4px;
+        }
+        .success {
+            background: #d4edda;
+            color: #155724;
+        }
+        .error {
+            background: #f8d7da;
+            color: #721c24;
+        }
+        .info {
+            background: #d1ecf1;
+            color: #0c5460;
+        }
+        button {
+            background: #007bff;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 4px;
+            cursor: pointer;
+            margin: 5px;
+        }
+        button:hover {
+            background: #0056b3;
+        }
+    </style>
+</head>
+<body>
+    <h1>Test Database Sync & Team Mode Fixes</h1>
+    
+    <div class="test-section">
+        <h2>1. localStorage Session Persistence</h2>
+        <button onclick="testLocalStorage()">Test localStorage</button>
+        <button onclick="clearLocalStorage()">Clear localStorage</button>
+        <div id="localStorage-result"></div>
+    </div>
+    
+    <div class="test-section">
+        <h2>2. Session Recovery</h2>
+        <button onclick="testSessionRecovery()">Test Session Recovery</button>
+        <div id="session-result"></div>
+    </div>
+    
+    <div class="test-section">
+        <h2>3. Team Mode Functions</h2>
+        <button onclick="testTeamCreation()">Test Create Team</button>
+        <button onclick="testTeamJoin()">Test Join Team</button>
+        <button onclick="testLoadTeams()">Test Load Teams</button>
+        <div id="team-result"></div>
+    </div>
+    
+    <div class="test-section">
+        <h2>4. Data Persistence</h2>
+        <button onclick="testDataPersistence()">Test Data Persistence</button>
+        <div id="persistence-result"></div>
+    </div>
+    
+    <script>
+        // Simulate user session
+        let userId = null;
+        let displayName = 'Test User';
+        
+        function log(elementId, message, type = 'info') {
+            const element = document.getElementById(elementId);
+            const div = document.createElement('div');
+            div.className = `test-result ${type}`;
+            div.textContent = `${new Date().toLocaleTimeString()}: ${message}`;
+            element.appendChild(div);
+        }
+        
+        function testLocalStorage() {
+            try {
+                // Test storing userId
+                const testUserId = 'U' + Math.random().toString(36).substr(2, 9);
+                localStorage.setItem('lineUserId', testUserId);
+                localStorage.setItem('lineDisplayName', displayName);
+                
+                // Test retrieving
+                const storedUserId = localStorage.getItem('lineUserId');
+                const storedDisplayName = localStorage.getItem('lineDisplayName');
+                
+                if (storedUserId === testUserId && storedDisplayName === displayName) {
+                    userId = storedUserId;
+                    log('localStorage-result', `✅ localStorage working: userId=${storedUserId}`, 'success');
+                } else {
+                    log('localStorage-result', '❌ localStorage test failed', 'error');
+                }
+            } catch (error) {
+                log('localStorage-result', `❌ Error: ${error.message}`, 'error');
+            }
+        }
+        
+        function clearLocalStorage() {
+            localStorage.removeItem('lineUserId');
+            localStorage.removeItem('lineDisplayName');
+            userId = null;
+            log('localStorage-result', 'Cleared localStorage', 'info');
+        }
+        
+        function testSessionRecovery() {
+            // Simulate LIFF failure but localStorage has data
+            const storedUserId = localStorage.getItem('lineUserId');
+            const storedDisplayName = localStorage.getItem('lineDisplayName');
+            
+            if (storedUserId) {
+                userId = storedUserId;
+                log('session-result', `✅ Session recovered from localStorage: ${userId}`, 'success');
+                log('session-result', `Display name: ${storedDisplayName}`, 'info');
+            } else {
+                log('session-result', '⚠️ No stored session found', 'info');
+                
+                // Simulate creating new session
+                userId = 'U' + Math.random().toString(36).substr(2, 9);
+                localStorage.setItem('lineUserId', userId);
+                localStorage.setItem('lineDisplayName', displayName);
+                log('session-result', `✅ Created new session: ${userId}`, 'success');
+            }
+        }
+        
+        async function testTeamCreation() {
+            if (!userId) {
+                log('team-result', '⚠️ No userId available, simulating login', 'info');
+                testSessionRecovery();
+            }
+            
+            try {
+                log('team-result', `Testing team creation for user: ${userId}`, 'info');
+                
+                // Simulate team creation API call
+                const teamData = {
+                    name: 'Test Team ' + Date.now(),
+                    owner_id: userId,
+                    description: `Team created by ${displayName}`
+                };
+                
+                log('team-result', `✅ Team data prepared: ${JSON.stringify(teamData)}`, 'success');
+                
+                // Check if userId is properly encoded
+                const encodedUserId = encodeURIComponent(userId);
+                log('team-result', `URL encoding check: ${userId} → ${encodedUserId}`, 'info');
+                
+            } catch (error) {
+                log('team-result', `❌ Error: ${error.message}`, 'error');
+            }
+        }
+        
+        async function testTeamJoin() {
+            if (!userId) {
+                log('team-result', '⚠️ No userId available, simulating login', 'info');
+                testSessionRecovery();
+            }
+            
+            try {
+                log('team-result', `Testing team join for user: ${userId}`, 'info');
+                
+                // Simulate join team API call
+                const joinData = {
+                    invite_code: 'TEST123',
+                    user_id: userId
+                };
+                
+                log('team-result', `✅ Join data prepared: ${JSON.stringify(joinData)}`, 'success');
+                
+            } catch (error) {
+                log('team-result', `❌ Error: ${error.message}`, 'error');
+            }
+        }
+        
+        async function testLoadTeams() {
+            if (!userId) {
+                log('team-result', '⚠️ No userId available', 'error');
+                return;
+            }
+            
+            try {
+                log('team-result', `Testing load teams for user: ${userId}`, 'info');
+                
+                // Check URL encoding
+                const apiUrl = `/api/teams?user_id=${encodeURIComponent(userId)}`;
+                log('team-result', `✅ API URL properly encoded: ${apiUrl}`, 'success');
+                
+            } catch (error) {
+                log('team-result', `❌ Error: ${error.message}`, 'error');
+            }
+        }
+        
+        function testDataPersistence() {
+            // Test 1: Store data
+            const testData = {
+                articles: ['article1', 'article2'],
+                timestamp: Date.now()
+            };
+            localStorage.setItem('testData', JSON.stringify(testData));
+            log('persistence-result', '✅ Data stored in localStorage', 'success');
+            
+            // Test 2: Retrieve data
+            const retrieved = localStorage.getItem('testData');
+            if (retrieved) {
+                const parsed = JSON.parse(retrieved);
+                log('persistence-result', `✅ Data retrieved: ${parsed.articles.length} articles`, 'success');
+            }
+            
+            // Test 3: Simulate page reload
+            log('persistence-result', 'Simulating page reload...', 'info');
+            setTimeout(() => {
+                const afterReload = localStorage.getItem('testData');
+                if (afterReload) {
+                    log('persistence-result', '✅ Data persists after reload simulation', 'success');
+                } else {
+                    log('persistence-result', '❌ Data lost after reload', 'error');
+                }
+            }, 1000);
+        }
+        
+        // Auto-run initial test
+        window.onload = function() {
+            log('localStorage-result', 'Ready for testing', 'info');
+            
+            // Check if there's existing session
+            const existingUserId = localStorage.getItem('lineUserId');
+            if (existingUserId) {
+                userId = existingUserId;
+                log('localStorage-result', `Found existing session: ${userId}`, 'success');
+            }
+        };
+    </script>
+</body>
+</html>

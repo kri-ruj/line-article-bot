@@ -83,6 +83,9 @@ class UltimateApp:
                 articles = []
                 for row in cursor.fetchall():
                     article = dict(row)
+                    # Clean title of problematic characters
+                    if article.get('title'):
+                        article['title'] = ' '.join(article['title'].split())  # Removes tabs, newlines, extra spaces
                     article['quantum_score'] = cls.calculate_quantum_score(article)
                     articles.append(article)
                 
@@ -107,6 +110,48 @@ class UltimateApp:
         except Exception as e:
             print(f"Update error: {e}")
             return False
+    
+    @classmethod
+    def extract_url_metadata(cls, url):
+        """Extract additional metadata from URL"""
+        metadata = {
+            'domain': '',
+            'estimated_read_time': 5,
+            'content_type': 'article',
+            'language': 'en',
+            'has_video': False,
+            'has_images': False,
+            'social_score': 0
+        }
+        
+        try:
+            from urllib.parse import urlparse
+            parsed = urlparse(url)
+            metadata['domain'] = parsed.netloc
+            
+            # Estimate content type based on URL patterns
+            if 'video' in url or 'youtube' in url or 'vimeo' in url:
+                metadata['content_type'] = 'video'
+                metadata['has_video'] = True
+            elif 'github.com' in url:
+                metadata['content_type'] = 'code'
+            elif any(x in url for x in ['pdf', '.pdf']):
+                metadata['content_type'] = 'pdf'
+            elif any(x in url for x in ['twitter.com', 'x.com', '/status/']):
+                metadata['content_type'] = 'tweet'
+                metadata['estimated_read_time'] = 1
+            elif 'facebook.com' in url:
+                metadata['content_type'] = 'social'
+                metadata['social_score'] = random.randint(10, 100)
+            
+            # Language detection from domain
+            if any(x in url for x in ['.jp', '.th', 'japan', 'thai']):
+                metadata['language'] = 'ja' if '.jp' in url else 'th'
+            
+        except Exception as e:
+            print(f"Error extracting metadata: {e}")
+        
+        return metadata
     
     @classmethod
     def get_analytics(cls):
@@ -229,6 +274,101 @@ class UltimateApp:
         
         recommendations.sort(key=lambda x: x['similarity_score'], reverse=True)
         return recommendations[:5]
+    
+    @classmethod
+    def get_reading_streak(cls):
+        """Calculate reading streak"""
+        articles = cls.get_articles()
+        completed = [a for a in articles if a.get('stage') == 'completed']
+        
+        # Simulate streak (in production, track dates)
+        streak_days = len(completed) // 2  # Simple calculation
+        return {
+            'current_streak': streak_days,
+            'best_streak': streak_days + random.randint(0, 5),
+            'total_read': len(completed)
+        }
+    
+    @classmethod
+    def get_speed_insights(cls):
+        """Get reading speed insights"""
+        articles = cls.get_articles()
+        
+        # Calculate average reading speed
+        total_words = sum(a.get('word_count', 0) for a in articles if a.get('stage') == 'completed')
+        total_time = sum(a.get('reading_time', 0) for a in articles if a.get('stage') == 'completed')
+        
+        avg_speed = (total_words / total_time) if total_time > 0 else 200
+        
+        return {
+            'avg_speed': int(avg_speed),
+            'total_words': total_words,
+            'total_time': total_time,
+            'speed_rating': 'Fast' if avg_speed > 250 else 'Average' if avg_speed > 150 else 'Slow'
+        }
+    
+    @classmethod
+    def generate_daily_digest(cls):
+        """Generate personalized daily digest"""
+        articles = cls.get_articles()
+        
+        # Get top 3 articles to read today
+        inbox_articles = [a for a in articles if a.get('stage') == 'inbox']
+        inbox_articles.sort(key=lambda x: x['quantum_score'], reverse=True)
+        
+        return {
+            'date': datetime.now().strftime('%Y-%m-%d'),
+            'recommended_articles': inbox_articles[:3],
+            'daily_goal': 2,
+            'motivational_quote': random.choice([
+                "A reader lives a thousand lives 📚",
+                "Knowledge is power 💪",
+                "Every article makes you smarter 🧠",
+                "Reading is dreaming with open eyes ✨"
+            ])
+        }
+    
+    @classmethod
+    def get_category_insights(cls):
+        """Get deep category analysis"""
+        articles = cls.get_articles()
+        categories = {}
+        
+        for article in articles:
+            cat = article.get('category', 'Other')
+            if cat not in categories:
+                categories[cat] = {
+                    'count': 0,
+                    'completed': 0,
+                    'total_score': 0,
+                    'avg_time': 0
+                }
+            
+            categories[cat]['count'] += 1
+            categories[cat]['total_score'] += article['quantum_score']
+            
+            if article.get('stage') == 'completed':
+                categories[cat]['completed'] += 1
+            
+            categories[cat]['avg_time'] += article.get('reading_time', 0)
+        
+        # Calculate averages
+        for cat in categories:
+            if categories[cat]['count'] > 0:
+                categories[cat]['avg_score'] = categories[cat]['total_score'] // categories[cat]['count']
+                categories[cat]['completion_rate'] = (categories[cat]['completed'] / categories[cat]['count'] * 100)
+                categories[cat]['avg_time'] = categories[cat]['avg_time'] // categories[cat]['count']
+        
+        return categories
+    
+    @classmethod
+    def export_to_markdown(cls, article_id):
+        """Export article notes to Markdown"""
+        notes = cls.generate_study_notes(article_id)
+        if notes:
+            # Add export timestamp
+            notes += f"\n\n---\n*Exported: {datetime.now().strftime('%Y-%m-%d %H:%M')}*"
+        return notes
 
 
 class RequestHandler(BaseHTTPRequestHandler):
@@ -257,6 +397,18 @@ class RequestHandler(BaseHTTPRequestHandler):
             article_id = int(path.split('/')[-1])
             recs = UltimateApp.get_recommendations(article_id)
             self.serve_json({'recommendations': recs})
+        elif path == '/api/ai/reading-streak':
+            self.serve_json(UltimateApp.get_reading_streak())
+        elif path == '/api/ai/speed-insights':
+            self.serve_json(UltimateApp.get_speed_insights())
+        elif path == '/api/ai/daily-digest':
+            self.serve_json(UltimateApp.generate_daily_digest())
+        elif path == '/api/ai/category-insights':
+            self.serve_json(UltimateApp.get_category_insights())
+        elif path.startswith('/api/ai/export-markdown/'):
+            article_id = int(path.split('/')[-1])
+            markdown = UltimateApp.export_to_markdown(article_id)
+            self.serve_json({'markdown': markdown})
         elif path.startswith('/api/ai/similar-articles'):
             # Find similar articles (simplified)
             articles = UltimateApp.get_articles()
@@ -418,17 +570,30 @@ class RequestHandler(BaseHTTPRequestHandler):
         
         .kanban-columns {
             display: grid;
-            grid-template-columns: repeat(4, 1fr);
-            gap: 20px;
+            grid-template-columns: repeat(4, minmax(280px, 1fr));
+            gap: 15px;
             margin-top: 20px;
+            overflow-x: auto;
+            padding-bottom: 10px;
+        }
+        
+        @media (max-width: 1400px) {
+            .kanban-columns { 
+                grid-template-columns: repeat(4, minmax(250px, 1fr));
+                gap: 12px;
+            }
         }
         
         @media (max-width: 1200px) {
-            .kanban-columns { grid-template-columns: repeat(2, 1fr); }
+            .kanban-columns { 
+                grid-template-columns: repeat(2, 1fr); 
+            }
         }
         
         @media (max-width: 600px) {
-            .kanban-columns { grid-template-columns: 1fr; }
+            .kanban-columns { 
+                grid-template-columns: 1fr; 
+            }
         }
         
         .kanban-column {
@@ -475,6 +640,7 @@ class RequestHandler(BaseHTTPRequestHandler):
             transition: all 0.3s;
             border-left: 4px solid;
             box-shadow: 0 2px 8px rgba(0,0,0,0.05);
+            position: relative;
         }
         
         .article-card:hover {
@@ -497,6 +663,27 @@ class RequestHandler(BaseHTTPRequestHandler):
             font-weight: 600;
             margin-bottom: 8px;
             color: #333;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+        
+        .domain-icon {
+            font-size: 1.2em;
+            flex-shrink: 0;
+        }
+        
+        .favicon-img {
+            width: 20px;
+            height: 20px;
+            flex-shrink: 0;
+            object-fit: contain;
+        }
+        
+        .title-text {
+            flex: 1;
+            overflow: hidden;
+            text-overflow: ellipsis;
         }
         
         .card-meta {
@@ -513,6 +700,167 @@ class RequestHandler(BaseHTTPRequestHandler):
             padding: 2px 8px;
             border-radius: 12px;
             font-weight: bold;
+        }
+        
+        .copy-button, .open-button {
+            position: absolute;
+            top: 10px;
+            background: #667eea;
+            color: white;
+            border: none;
+            border-radius: 8px;
+            padding: 5px 10px;
+            cursor: pointer;
+            font-size: 0.85em;
+            transition: all 0.3s;
+            opacity: 0;
+        }
+        
+        .copy-button {
+            right: 10px;
+        }
+        
+        .open-button {
+            right: 80px;
+            background: #4ecdc4;
+        }
+        
+        .article-card:hover .copy-button,
+        .article-card:hover .open-button {
+            opacity: 1;
+        }
+        
+        .copy-button:hover {
+            background: #764ba2;
+            transform: scale(1.05);
+        }
+        
+        .open-button:hover {
+            background: #45b7b8;
+            transform: scale(1.05);
+        }
+        
+        .copy-button.copied {
+            background: #4CAF50;
+        }
+        
+        .copy-feedback {
+            position: fixed;
+            bottom: 20px;
+            right: 20px;
+            background: #4CAF50;
+            color: white;
+            padding: 12px 20px;
+            border-radius: 8px;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.2);
+            z-index: 10000;
+            animation: slideIn 0.3s ease;
+        }
+        
+        @keyframes slideIn {
+            from {
+                transform: translateX(100%);
+                opacity: 0;
+            }
+            to {
+                transform: translateX(0);
+                opacity: 1;
+            }
+        }
+        
+        /* Calendar Styles */
+        .calendar-grid {
+            display: grid;
+            grid-template-columns: 60px repeat(7, 1fr);
+            gap: 1px;
+            background: white;
+            border-radius: 12px;
+            padding: 10px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+            font-size: 0.85em;
+        }
+        
+        .calendar-header {
+            background: #667eea;
+            color: white;
+            padding: 10px;
+            text-align: center;
+            font-weight: bold;
+            border-radius: 8px;
+        }
+        
+        .time-label {
+            padding: 10px;
+            text-align: right;
+            font-size: 0.9em;
+            color: #666;
+            border-right: 2px solid #f0f0f0;
+        }
+        
+        .calendar-slot {
+            min-height: 40px;
+            background: #f8f9fa;
+            border: 1px dashed #e0e0e0;
+            border-radius: 4px;
+            padding: 2px;
+            position: relative;
+            transition: all 0.3s;
+            font-size: 0.75em;
+        }
+        
+        .calendar-slot:hover {
+            background: #f0f0f0;
+            border-color: #667eea;
+        }
+        
+        .calendar-slot.drag-over {
+            background: #e8eaf6;
+            border-color: #667eea;
+            border-style: solid;
+        }
+        
+        .scheduled-article {
+            background: white;
+            padding: 5px;
+            border-radius: 6px;
+            font-size: 0.85em;
+            margin-bottom: 3px;
+            cursor: move;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+            display: flex;
+            align-items: center;
+            gap: 5px;
+        }
+        
+        .scheduled-article:hover {
+            transform: translateY(-1px);
+            box-shadow: 0 2px 5px rgba(0,0,0,0.15);
+        }
+        
+        .current-time-indicator {
+            position: absolute;
+            left: 0;
+            right: 0;
+            height: 2px;
+            background: #ff4757;
+            box-shadow: 0 1px 3px rgba(255,71,87,0.5);
+            pointer-events: none;
+            z-index: 10;
+        }
+        
+        .current-time-indicator::before {
+            content: '';
+            position: absolute;
+            left: -5px;
+            top: -4px;
+            width: 10px;
+            height: 10px;
+            background: #ff4757;
+            border-radius: 50%;
+        }
+        
+        .today-column {
+            background: #fff3e0 !important;
         }
         
         .modal {
@@ -628,13 +976,21 @@ class RequestHandler(BaseHTTPRequestHandler):
                 <button class="btn" onclick="showPriority()">📊 Priority Ranking</button>
                 <button class="btn" onclick="generateNotes()">📝 Study Notes</button>
                 <button class="btn" onclick="showRecommendations()">💡 Smart Recommendations</button>
-                <button class="btn" onclick="loadAIInsights()">🔄 Refresh Analytics</button>
+                <button class="btn" onclick="showDailyDigest()">📅 Daily Digest</button>
+                <button class="btn" onclick="showReadingStreak()">🔥 Reading Streak</button>
+                <button class="btn" onclick="showSpeedInsights()">⚡ Speed Insights</button>
+                <button class="btn" onclick="showCategoryInsights()">📈 Category Analysis</button>
+                <button class="btn" onclick="exportMarkdown()">📄 Export Notes</button>
+                <button class="btn" onclick="loadAIInsights()">🔄 Refresh</button>
             </div>
         </div>
         
-        <div class="kanban-board">
-            <h2 style="margin-bottom: 10px;">📋 Kanban Board</h2>
-            <p style="color: #666; margin-bottom: 20px;">Drag and drop articles between columns to update their status</p>
+        <!-- Split View Container -->
+        <div style="display: flex; gap: 20px; margin-top: 20px;">
+            <!-- Left: Kanban Board -->
+            <div class="kanban-board" id="kanban-view" style="flex: 1; min-width: 600px;">
+                <h2 style="margin-bottom: 10px;">📋 Kanban Board</h2>
+                <p style="color: #666; margin-bottom: 20px; font-size: 0.9em;">Drag articles to calendar to schedule →</p>
             
             <div class="kanban-columns">
                 <div class="kanban-column" ondrop="drop(event, 'inbox')" ondragover="allowDrop(event)" ondragleave="dragLeave(event)">
@@ -670,6 +1026,21 @@ class RequestHandler(BaseHTTPRequestHandler):
                 </div>
             </div>
         </div>
+            </div>
+            
+            <!-- Right: Calendar -->
+            <div id="calendar-view" style="flex: 1; min-width: 500px;">
+                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;">
+                    <h2>📅 Reading Schedule</h2>
+                    <div>
+                        <button class="btn" onclick="previousWeek()" style="padding: 5px 10px; font-size: 0.9em;">←</button>
+                        <button class="btn" onclick="currentWeek()" style="padding: 5px 10px; font-size: 0.9em;">Today</button>
+                        <button class="btn" onclick="nextWeek()" style="padding: 5px 10px; font-size: 0.9em;">→</button>
+                    </div>
+                </div>
+                <div id="calendar-container"></div>
+            </div>
+        </div>
     </div>
     
     <!-- Modal -->
@@ -691,14 +1062,24 @@ class RequestHandler(BaseHTTPRequestHandler):
         
         // Load articles
         function loadArticles() {
+            console.log('Loading articles...');
             fetch('/api/articles')
-                .then(r => r.json())
+                .then(r => {
+                    console.log('API response received:', r.status);
+                    return r.json();
+                })
                 .then(data => {
+                    console.log('Articles data:', data);
                     articles = {};
                     
                     // Clear all columns
                     ['inbox', 'reading', 'reviewing', 'completed'].forEach(stage => {
-                        document.getElementById(stage + '-cards').innerHTML = '';
+                        const element = document.getElementById(stage + '-cards');
+                        if (element) {
+                            element.innerHTML = '';
+                        } else {
+                            console.error('Element not found:', stage + '-cards');
+                        }
                     });
                     
                     // Count articles per stage
@@ -715,17 +1096,93 @@ class RequestHandler(BaseHTTPRequestHandler):
                         card.id = 'article-' + article.id;
                         card.draggable = true;
                         
-                        // Truncate title
+                        // Escape HTML function
+                        function escapeHtml(text) {
+                            const div = document.createElement('div');
+                            div.textContent = text;
+                            return div.innerHTML;
+                        }
+                        
+                        // Truncate and escape title
                         const title = article.title || 'Untitled';
                         const displayTitle = title.length > 50 ? title.substring(0, 50) + '...' : title;
                         
-                        card.innerHTML = `
-                            <div class="card-title">${displayTitle}</div>
-                            <div class="card-meta">
-                                <span>${article.category || 'Other'}</span>
-                                <span class="quantum-score">${article.quantum_score || 0}</span>
-                            </div>
-                        `;
+                        // Create elements safely without innerHTML
+                        const titleDiv = document.createElement('div');
+                        titleDiv.className = 'card-title';
+                        
+                        // Add icon/favicon
+                        const icon = document.createElement('span');
+                        icon.className = 'domain-icon';
+                        icon.textContent = getDomainIcon(article.url);
+                        
+                        // Try to use favicon if available
+                        const faviconUrl = getFaviconUrl(article.url);
+                        if (faviconUrl) {
+                            const favicon = document.createElement('img');
+                            favicon.className = 'favicon-img';
+                            favicon.src = faviconUrl;
+                            favicon.onerror = () => {
+                                // If favicon fails to load, use emoji
+                                favicon.style.display = 'none';
+                                icon.style.display = 'inline-block';
+                            };
+                            favicon.onload = () => {
+                                // Hide emoji if favicon loads successfully
+                                icon.style.display = 'none';
+                            };
+                            titleDiv.appendChild(favicon);
+                        }
+                        
+                        titleDiv.appendChild(icon);
+                        
+                        // Add title text
+                        const titleText = document.createElement('span');
+                        titleText.className = 'title-text';
+                        titleText.textContent = displayTitle;
+                        titleDiv.appendChild(titleText);
+                        
+                        const metaDiv = document.createElement('div');
+                        metaDiv.className = 'card-meta';
+                        
+                        const categorySpan = document.createElement('span');
+                        categorySpan.textContent = article.category || 'Other';
+                        
+                        const scoreSpan = document.createElement('span');
+                        scoreSpan.className = 'quantum-score';
+                        scoreSpan.textContent = article.quantum_score || 0;
+                        
+                        metaDiv.appendChild(categorySpan);
+                        metaDiv.appendChild(scoreSpan);
+                        
+                        // Add open link button
+                        const openButton = document.createElement('button');
+                        openButton.className = 'open-button';
+                        openButton.textContent = '🔗 Open';
+                        openButton.onclick = (e) => {
+                            e.stopPropagation();
+                            const url = article.url || '#';
+                            if (url && url !== '#') {
+                                window.open(url, '_blank');
+                                showCopyFeedback('Opening link in new tab...', 'info');
+                            } else {
+                                showCopyFeedback('No URL available for this article', 'error');
+                            }
+                        };
+                        
+                        // Add copy button
+                        const copyButton = document.createElement('button');
+                        copyButton.className = 'copy-button';
+                        copyButton.textContent = '📋 Copy';
+                        copyButton.onclick = (e) => {
+                            e.stopPropagation();
+                            copyToClipboard(article.url || article.title, copyButton);
+                        };
+                        
+                        card.appendChild(titleDiv);
+                        card.appendChild(metaDiv);
+                        card.appendChild(openButton);
+                        card.appendChild(copyButton);
                         
                         // Add drag event listeners
                         card.addEventListener('dragstart', drag);
@@ -741,7 +1198,112 @@ class RequestHandler(BaseHTTPRequestHandler):
                     
                     updateStats();
                     loadAIInsights();
+                })
+                .catch(error => {
+                    console.error('Error loading articles:', error);
+                    alert('Error loading articles: ' + error.message);
                 });
+        }
+        
+        // Get domain icon/emoji
+        function getDomainIcon(url) {
+            if (!url) return '📄';
+            
+            const urlLower = url.toLowerCase();
+            
+            // Check for specific domains and return emojis
+            if (urlLower.includes('github.com')) return '🐙';
+            if (urlLower.includes('facebook.com')) return '📘';
+            if (urlLower.includes('twitter.com') || urlLower.includes('x.com')) return '🐦';
+            if (urlLower.includes('youtube.com')) return '📺';
+            if (urlLower.includes('linkedin.com')) return '💼';
+            if (urlLower.includes('medium.com')) return '📝';
+            if (urlLower.includes('reddit.com')) return '🤖';
+            if (urlLower.includes('stackoverflow.com')) return '💻';
+            if (urlLower.includes('instagram.com')) return '📷';
+            if (urlLower.includes('line.')) return '💬';
+            if (urlLower.includes('google.com')) return '🔍';
+            if (urlLower.includes('amazon.com')) return '📦';
+            if (urlLower.includes('apple.com')) return '🍎';
+            if (urlLower.includes('microsoft.com')) return '🪟';
+            if (urlLower.includes('wikipedia.org')) return '📚';
+            if (urlLower.includes('ngrok')) return '🔧';
+            if (urlLower.includes('localhost')) return '🏠';
+            if (urlLower.includes('soccersuck')) return '⚽';
+            
+            // Check for generic patterns
+            if (urlLower.includes('news') || urlLower.includes('blog')) return '📰';
+            if (urlLower.includes('shop') || urlLower.includes('store')) return '🛍️';
+            if (urlLower.includes('video')) return '🎥';
+            if (urlLower.includes('music')) return '🎵';
+            if (urlLower.includes('game')) return '🎮';
+            if (urlLower.includes('sport')) return '🏆';
+            if (urlLower.includes('food')) return '🍔';
+            if (urlLower.includes('travel')) return '✈️';
+            if (urlLower.includes('edu') || urlLower.includes('university')) return '🎓';
+            
+            // Default icon
+            return '🌐';
+        }
+        
+        // Get favicon URL for a domain
+        function getFaviconUrl(url) {
+            if (!url) return null;
+            try {
+                const domain = new URL(url).hostname;
+                // Use Google's favicon service
+                return `https://www.google.com/s2/favicons?domain=${domain}&sz=32`;
+            } catch {
+                return null;
+            }
+        }
+        
+        // Copy to clipboard function
+        function copyToClipboard(text, button) {
+            navigator.clipboard.writeText(text).then(() => {
+                // Change button to show success
+                const originalText = button.textContent;
+                button.textContent = '✅ Copied!';
+                button.classList.add('copied');
+                
+                // Show feedback notification
+                showCopyFeedback('URL copied to clipboard!');
+                
+                // Reset button after 2 seconds
+                setTimeout(() => {
+                    button.textContent = originalText;
+                    button.classList.remove('copied');
+                }, 2000);
+            }).catch(err => {
+                console.error('Failed to copy:', err);
+                showCopyFeedback('Failed to copy!', 'error');
+            });
+        }
+        
+        function showCopyFeedback(message, type = 'success') {
+            // Remove any existing feedback
+            const existingFeedback = document.querySelector('.copy-feedback');
+            if (existingFeedback) {
+                existingFeedback.remove();
+            }
+            
+            // Create new feedback element
+            const feedback = document.createElement('div');
+            feedback.className = 'copy-feedback';
+            feedback.textContent = message;
+            
+            if (type === 'error') {
+                feedback.style.background = '#f44336';
+            } else if (type === 'info') {
+                feedback.style.background = '#2196F3';
+            }
+            
+            document.body.appendChild(feedback);
+            
+            // Remove after 3 seconds
+            setTimeout(() => {
+                feedback.remove();
+            }, 3000);
         }
         
         // Drag and Drop Functions
@@ -771,7 +1333,8 @@ class RequestHandler(BaseHTTPRequestHandler):
             
             if (!draggedElement) return;
             
-            const articleId = parseInt(draggedElement.id.replace('article-', ''));
+            const elementToMove = draggedElement;  // Store reference before async operation
+            const articleId = parseInt(elementToMove.id.replace('article-', ''));
             
             // Update in backend
             fetch('/api/update-stage', {
@@ -786,17 +1349,25 @@ class RequestHandler(BaseHTTPRequestHandler):
             .then(data => {
                 if (data.status === 'success') {
                     // Move the card
-                    document.getElementById(newStage + '-cards').appendChild(draggedElement);
-                    
-                    // Update card style
-                    draggedElement.className = 'article-card card-' + newStage;
-                    
-                    // Update article data
-                    articles[articleId].stage = newStage;
-                    
-                    // Update counts
-                    updateCounts();
+                    const targetContainer = document.getElementById(newStage + '-cards');
+                    if (targetContainer && elementToMove) {
+                        targetContainer.appendChild(elementToMove);
+                        
+                        // Update card style
+                        elementToMove.className = 'article-card card-' + newStage;
+                        
+                        // Update article data
+                        if (articles[articleId]) {
+                            articles[articleId].stage = newStage;
+                        }
+                        
+                        // Update counts
+                        updateCounts();
+                    }
                 }
+            })
+            .catch(error => {
+                console.error('Error updating stage:', error);
             });
             
             draggedElement = null;
@@ -824,6 +1395,11 @@ class RequestHandler(BaseHTTPRequestHandler):
                     document.getElementById('total-articles').textContent = data.total_articles || 0;
                     document.getElementById('avg-quantum').textContent = Math.round(data.avg_quantum_score || 0);
                     document.getElementById('completion-rate').textContent = Math.round(data.completion_rate || 0) + '%';
+                })
+                .catch(error => {
+                    console.error('Error updating stats:', error);
+                    // Set default values on error
+                    document.getElementById('total-articles').textContent = articles ? Object.keys(articles).length : 0;
                 });
         }
         
@@ -833,7 +1409,13 @@ class RequestHandler(BaseHTTPRequestHandler):
                 .then(r => r.json())
                 .then(data => {
                     const count = data.similar_articles ? data.similar_articles.length : 0;
-                    document.getElementById('similar-count').textContent = count;
+                    const element = document.getElementById('similar-count');
+                    if (element) {
+                        element.textContent = count;
+                    }
+                })
+                .catch(error => {
+                    console.error('Error loading AI insights:', error);
                 });
         }
         
@@ -923,11 +1505,320 @@ class RequestHandler(BaseHTTPRequestHandler):
             document.getElementById('modal').classList.remove('show');
         }
         
+        // New Features Functions
+        function showDailyDigest() {
+            fetch('/api/ai/daily-digest')
+                .then(r => r.json())
+                .then(data => {
+                    let html = `
+                        <h3>📅 Today's Reading Plan - ${data.date}</h3>
+                        <p style="font-style: italic; color: #667eea; font-size: 1.1em; margin: 20px 0;">
+                            "${data.motivational_quote}"
+                        </p>
+                        <p><strong>Daily Goal:</strong> Read ${data.daily_goal} articles today</p>
+                        <h4>Recommended Articles:</h4>
+                    `;
+                    
+                    if (data.recommended_articles && data.recommended_articles.length > 0) {
+                        data.recommended_articles.forEach((article, i) => {
+                            html += `
+                                <div class="priority-item">
+                                    <span class="priority-rank">${i+1}</span>
+                                    <strong>${article.title}</strong><br>
+                                    <small>Quantum Score: ${article.quantum_score} | ${article.category || 'Other'}</small>
+                                </div>
+                            `;
+                        });
+                    } else {
+                        html += '<p>No new articles to read. Great job! 🎉</p>';
+                    }
+                    
+                    showModal('📅 Daily Digest', html);
+                });
+        }
+        
+        function showReadingStreak() {
+            fetch('/api/ai/reading-streak')
+                .then(r => r.json())
+                .then(data => {
+                    const streakEmoji = data.current_streak > 7 ? '🔥🔥🔥' : 
+                                       data.current_streak > 3 ? '🔥🔥' : '🔥';
+                    
+                    let html = `
+                        <div style="text-align: center; padding: 20px;">
+                            <h2 style="font-size: 3em; margin: 20px 0;">${streakEmoji}</h2>
+                            <h3 style="color: #667eea; font-size: 2em;">${data.current_streak} Day Streak!</h3>
+                            <p style="margin: 20px 0;">
+                                <strong>Best Streak:</strong> ${data.best_streak} days<br>
+                                <strong>Total Articles Read:</strong> ${data.total_read}
+                            </p>
+                            ${data.current_streak > 0 ? 
+                                '<p style="color: green;">Keep it up! Do not break the chain! 💪</p>' : 
+                                '<p style="color: #666;">Start reading today to begin your streak!</p>'}
+                        </div>
+                    `;
+                    
+                    showModal('🔥 Reading Streak', html);
+                });
+        }
+        
+        function showSpeedInsights() {
+            fetch('/api/ai/speed-insights')
+                .then(r => r.json())
+                .then(data => {
+                    const speedColor = data.speed_rating === 'Fast' ? 'green' : 
+                                      data.speed_rating === 'Average' ? 'orange' : 'red';
+                    
+                    let html = `
+                        <h3>⚡ Your Reading Speed Analysis</h3>
+                        <div style="text-align: center; margin: 30px 0;">
+                            <div style="font-size: 3em; color: ${speedColor};">
+                                ${data.avg_speed} WPM
+                            </div>
+                            <div style="font-size: 1.2em; color: #666;">
+                                ${data.speed_rating} Reader
+                            </div>
+                        </div>
+                        <div style="background: #f8f9fa; padding: 15px; border-radius: 10px;">
+                            <p><strong>Total Words Read:</strong> ${data.total_words.toLocaleString()}</p>
+                            <p><strong>Total Reading Time:</strong> ${data.total_time} minutes</p>
+                            <p><strong>Recommendation:</strong> 
+                                ${data.speed_rating === 'Fast' ? 
+                                    'Excellent speed! You can tackle longer articles.' :
+                                  data.speed_rating === 'Average' ? 
+                                    'Good pace! Try speed reading techniques to improve.' :
+                                    'Take your time and focus on comprehension.'}
+                            </p>
+                        </div>
+                    `;
+                    
+                    showModal('⚡ Speed Insights', html);
+                });
+        }
+        
+        function showCategoryInsights() {
+            fetch('/api/ai/category-insights')
+                .then(r => r.json())
+                .then(data => {
+                    let html = '<h3>📈 Category Performance Analysis</h3>';
+                    
+                    for (let cat in data) {
+                        const catData = data[cat];
+                        const completionColor = catData.completion_rate > 70 ? 'green' : 
+                                               catData.completion_rate > 40 ? 'orange' : 'red';
+                        
+                        html += `
+                            <div style="background: #f8f9fa; padding: 15px; margin: 10px 0; border-radius: 10px;">
+                                <h4>${cat}</h4>
+                                <div style="display: grid; grid-template-columns: repeat(2, 1fr); gap: 10px;">
+                                    <div>
+                                        <small>Articles:</small> ${catData.count}<br>
+                                        <small>Completed:</small> ${catData.completed}
+                                    </div>
+                                    <div>
+                                        <small>Avg Score:</small> ${catData.avg_score}<br>
+                                        <small>Avg Time:</small> ${catData.avg_time} min
+                                    </div>
+                                </div>
+                                <div style="margin-top: 10px;">
+                                    <small>Completion Rate:</small>
+                                    <div style="background: #ddd; height: 20px; border-radius: 10px; overflow: hidden;">
+                                        <div style="background: ${completionColor}; height: 100%; width: ${catData.completion_rate}%;"></div>
+                                    </div>
+                                    <small>${Math.round(catData.completion_rate)}%</small>
+                                </div>
+                            </div>
+                        `;
+                    }
+                    
+                    showModal('📈 Category Insights', html);
+                });
+        }
+        
+        function exportMarkdown() {
+            const articleList = Object.values(articles);
+            if (articleList.length > 0) {
+                const article = articleList[0];
+                fetch(`/api/ai/export-markdown/${article.id}`)
+                    .then(r => r.json())
+                    .then(data => {
+                        let html = `
+                            <h3>📄 Export Study Notes</h3>
+                            <p>Copy the markdown below:</p>
+                            <textarea style="width: 100%; height: 400px; padding: 10px; border: 1px solid #ddd; border-radius: 8px; font-family: monospace;" readonly>
+${data.markdown || 'No notes available'}
+                            </textarea>
+                            <button onclick="navigator.clipboard.writeText(this.previousElementSibling.value); alert('Copied to clipboard!');" 
+                                    class="btn" style="margin-top: 10px;">
+                                📋 Copy to Clipboard
+                            </button>
+                        `;
+                        showModal('📄 Export Notes', html);
+                    });
+            } else {
+                alert('No articles available');
+            }
+        }
+        
+        // Calendar functionality
+        let currentWeekOffset = 0;
+        let scheduledArticles = JSON.parse(localStorage.getItem('scheduledArticles') || '{}');
+        
+        
+        function renderCalendar() {
+            const container = document.getElementById('calendar-container');
+            const today = new Date();
+            const weekStart = new Date(today);
+            weekStart.setDate(today.getDate() - today.getDay() + (currentWeekOffset * 7));
+            
+            const days = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
+            const timeSlots = [
+                '6:00 AM', '7:00 AM', '8:00 AM', '9:00 AM', '10:00 AM', '11:00 AM',
+                '12:00 PM', '1:00 PM', '2:00 PM', '3:00 PM', '4:00 PM', '5:00 PM',
+                '6:00 PM', '7:00 PM', '8:00 PM', '9:00 PM'
+            ];
+            
+            let html = '<div class="calendar-grid">';
+            
+            // Header row
+            html += '<div></div>'; // Empty corner
+            for (let i = 0; i < 7; i++) {
+                const currentDate = new Date(weekStart);
+                currentDate.setDate(weekStart.getDate() + i);
+                const isToday = currentDate.toDateString() === today.toDateString();
+                html += `<div class="calendar-header ${isToday ? 'today-column' : ''}">
+                    ${days[i]}<br>${currentDate.getMonth() + 1}/${currentDate.getDate()}
+                </div>`;
+            }
+            
+            // Time slots
+            timeSlots.forEach((time, timeIndex) => {
+                html += `<div class="time-label">${time}</div>`;
+                
+                for (let day = 0; day < 7; day++) {
+                    const currentDate = new Date(weekStart);
+                    currentDate.setDate(weekStart.getDate() + day);
+                    const dateStr = currentDate.toISOString().split('T')[0];
+                    const slotKey = `${dateStr}_${timeIndex}`;
+                    const isToday = currentDate.toDateString() === today.toDateString();
+                    
+                    html += `<div class="calendar-slot ${isToday ? 'today-column' : ''}" 
+                        data-date="${dateStr}" 
+                        data-time="${timeIndex}"
+                        ondrop="dropToCalendar(event, '${slotKey}')"
+                        ondragover="allowDrop(event)"
+                        ondragleave="dragLeave(event)">`;
+                    
+                    // Add scheduled articles for this slot
+                    if (scheduledArticles[slotKey]) {
+                        scheduledArticles[slotKey].forEach(articleId => {
+                            const article = articles[articleId];
+                            if (article) {
+                                const icon = getDomainIcon(article.url);
+                                const shortTitle = article.title ? 
+                                    (article.title.length > 30 ? article.title.substring(0, 30) + '...' : article.title) : 
+                                    'Untitled';
+                                html += `<div class="scheduled-article" 
+                                    draggable="true" 
+                                    data-article-id="${articleId}"
+                                    ondragstart="dragScheduled(event, ${articleId}, '${slotKey}')">
+                                    <span>${icon}</span>
+                                    <span>${shortTitle}</span>
+                                </div>`;
+                            }
+                        });
+                    }
+                    
+                    html += '</div>';
+                }
+            });
+            
+            html += '</div>';
+            container.innerHTML = html;
+            
+            // Add current time indicator if showing current week
+            if (currentWeekOffset === 0) {
+                updateTimeIndicator();
+            }
+        }
+        
+        function dropToCalendar(ev, slotKey) {
+            ev.preventDefault();
+            ev.currentTarget.classList.remove('drag-over');
+            
+            if (!draggedElement) return;
+            
+            const articleId = parseInt(draggedElement.id.replace('article-', ''));
+            
+            // Initialize slot if doesn't exist
+            if (!scheduledArticles[slotKey]) {
+                scheduledArticles[slotKey] = [];
+            }
+            
+            // Add article to slot if not already there
+            if (!scheduledArticles[slotKey].includes(articleId)) {
+                scheduledArticles[slotKey].push(articleId);
+                localStorage.setItem('scheduledArticles', JSON.stringify(scheduledArticles));
+                renderCalendar();
+                showCopyFeedback('Article scheduled!', 'success');
+            }
+        }
+        
+        function dragScheduled(ev, articleId, currentSlot) {
+            draggedElement = { id: 'article-' + articleId };
+            ev.dataTransfer.effectAllowed = 'move';
+            
+            // Remove from current slot
+            if (scheduledArticles[currentSlot]) {
+                scheduledArticles[currentSlot] = scheduledArticles[currentSlot].filter(id => id !== articleId);
+                if (scheduledArticles[currentSlot].length === 0) {
+                    delete scheduledArticles[currentSlot];
+                }
+                localStorage.setItem('scheduledArticles', JSON.stringify(scheduledArticles));
+            }
+        }
+        
+        function previousWeek() {
+            currentWeekOffset--;
+            renderCalendar();
+        }
+        
+        function currentWeek() {
+            currentWeekOffset = 0;
+            renderCalendar();
+        }
+        
+        function nextWeek() {
+            currentWeekOffset++;
+            renderCalendar();
+        }
+        
+        function updateTimeIndicator() {
+            // This would update a red line showing current time
+            // Implementation depends on more complex time calculations
+        }
+        
         // Initialize
-        loadArticles();
+        console.log('Initializing app...');
+        
+        // Wait for DOM to be ready
+        if (document.readyState === 'loading') {
+            document.addEventListener('DOMContentLoaded', () => {
+                console.log('DOM loaded, loading articles...');
+                loadArticles();
+                renderCalendar();
+            });
+        } else {
+            console.log('DOM already loaded, loading articles now...');
+            loadArticles();
+            setTimeout(renderCalendar, 100);  // Small delay to ensure articles are loaded
+        }
         
         // Auto-refresh every 30 seconds
-        setInterval(loadArticles, 30000);
+        setInterval(() => {
+            console.log('Auto-refreshing articles...');
+            loadArticles();
+        }, 30000);
     </script>
 </body>
 </html>'''

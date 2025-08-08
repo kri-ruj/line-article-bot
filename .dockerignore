@@ -1,0 +1,70 @@
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+venv/
+env/
+ENV/
+
+# Database files (will be created at runtime)
+*.db
+*.sqlite
+*.sqlite3
+
+# Logs
+*.log
+logs/
+*.out
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+
+# Git
+.git/
+.gitignore
+
+# Documentation
+README.md
+CLAUDE.md
+docs/
+
+# Test files
+test_*.py
+*_test.py
+tests/
+
+# Development files
+app_*.py
+!app_production.py
+!app_production_complete.py
+!app_production_persistent.py
+!app_production_fixed.py
+!app_production_enhanced.py
+!app_production_persistent_fixed.py
+!app_firestore.py
+!app_firestore_fixed.py
+!app_firestore_final.py
+verify_*.py
+update_*.py
+create_*.py
+set_*.py
+
+
+# Mac
+.DS_Store
+
+# Environment files
+.env
+# Keep .env.production for the build
+# .env.*
+
+# Temporary files
+tmp/
+temp/
+*.tmp

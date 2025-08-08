@@ -1,0 +1,32 @@
+# Use Python slim image for smaller size
+FROM --platform=linux/amd64 python:3.11-slim
+
+# Set working directory
+WORKDIR /app
+
+# Install system dependencies
+RUN apt-get update && apt-get install -y \
+    gcc \
+    && rm -rf /var/lib/apt/lists/*
+
+# Copy requirements first for better caching
+COPY requirements_firestore.txt .
+
+# Install Python dependencies
+RUN pip install --no-cache-dir -r requirements_firestore.txt
+
+# Copy application files
+COPY app_firestore_final.py app_production.py
+COPY .env.production .
+
+# Set environment variables
+ENV PORT=8080
+ENV PYTHONUNBUFFERED=1
+# Don't set GOOGLE_APPLICATION_CREDENTIALS - Cloud Run uses default service account
+
+# Health check
+HEALTHCHECK --interval=30s --timeout=10s --start-period=5s --retries=3 \
+  CMD python -c "import urllib.request; urllib.request.urlopen('http://localhost:8080/health')" || exit 1
+
+# Run the application
+CMD ["python", "app_production.py"]

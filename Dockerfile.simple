@@ -1,0 +1,18 @@
+FROM python:3.11-slim
+
+WORKDIR /app
+
+# Copy requirements and install dependencies
+COPY requirements.txt .
+RUN pip install --no-cache-dir -r requirements.txt
+
+# Copy application
+COPY app_firestore_final.py .
+COPY .env.production .
+
+# Set environment variables
+ENV PORT=8080
+ENV GOOGLE_APPLICATION_CREDENTIALS=/app/service-account.json
+
+# Run the application
+CMD ["python", "app_firestore_final.py"]

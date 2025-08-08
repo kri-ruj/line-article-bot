@@ -1,0 +1,34 @@
+# Cloud Build configuration for Google Cloud Run deployment
+steps:
+  # Build the Docker image
+  - name: 'gcr.io/cloud-builders/docker'
+    args: ['build', '-t', 'gcr.io/$PROJECT_ID/article-hub:$COMMIT_SHA', '.']
+  
+  # Push the Docker image to Container Registry
+  - name: 'gcr.io/cloud-builders/docker'
+    args: ['push', 'gcr.io/$PROJECT_ID/article-hub:$COMMIT_SHA']
+  
+  # Deploy to Cloud Run
+  - name: 'gcr.io/cloud-builders/gcloud'
+    args:
+      - 'run'
+      - 'deploy'
+      - 'article-hub'
+      - '--image=gcr.io/$PROJECT_ID/article-hub:$COMMIT_SHA'
+      - '--region=asia-northeast1'
+      - '--platform=managed'
+      - '--allow-unauthenticated'
+      - '--memory=512Mi'
+      - '--cpu=1'
+      - '--timeout=60'
+      - '--max-instances=10'
+      - '--set-env-vars=BASE_URL=https://article-hub-secondbrain-app-20250612.a.run.app'
+      - '--set-env-vars=LIFF_ID=2007552096-GxP76rNd'
+
+# Tag the image as latest
+images:
+  - 'gcr.io/$PROJECT_ID/article-hub:$COMMIT_SHA'
+  - 'gcr.io/$PROJECT_ID/article-hub:latest'
+
+options:
+  logging: CLOUD_LOGGING_ONLY

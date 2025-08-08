@@ -1,0 +1,69 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg width="2500" height="1686" xmlns="http://www.w3.org/2000/svg">
+  <defs>
+    <!-- Gradients for each section -->
+    <linearGradient id="grad1" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" style="stop-color:#667eea;stop-opacity:1" />
+      <stop offset="100%" style="stop-color:#8b7ee8;stop-opacity:1" />
+    </linearGradient>
+    <linearGradient id="grad2" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" style="stop-color:#764ba2;stop-opacity:1" />
+      <stop offset="100%" style="stop-color:#965bc2;stop-opacity:1" />
+    </linearGradient>
+    <!-- Drop shadow filter -->
+    <filter id="shadow" x="-50%" y="-50%" width="200%" height="200%">
+      <feDropShadow dx="0" dy="4" stdDeviation="10" flood-opacity="0.2"/>
+    </filter>
+  </defs>
+  
+  <!-- Background -->
+  <rect width="2500" height="1686" fill="#f0f0ff"/>
+  
+  <!-- Grid sections with gradients -->
+  <!-- Top row -->
+  <g id="section1">
+    <rect x="10" y="10" width="813" height="823" rx="20" fill="url(#grad1)" filter="url(#shadow)"/>
+    <text x="416" y="350" font-family="Arial, sans-serif" font-size="120" fill="white" text-anchor="middle">🌐</text>
+    <text x="416" y="470" font-family="Arial, sans-serif" font-size="55" font-weight="bold" fill="white" text-anchor="middle">Open</text>
+    <text x="416" y="540" font-family="Arial, sans-serif" font-size="55" font-weight="bold" fill="white" text-anchor="middle">Web App</text>
+  </g>
+  
+  <g id="section2">
+    <rect x="843" y="10" width="814" height="823" rx="20" fill="url(#grad2)" filter="url(#shadow)"/>
+    <text x="1250" y="350" font-family="Arial, sans-serif" font-size="120" fill="white" text-anchor="middle">📋</text>
+    <text x="1250" y="470" font-family="Arial, sans-serif" font-size="55" font-weight="bold" fill="white" text-anchor="middle">My</text>
+    <text x="1250" y="540" font-family="Arial, sans-serif" font-size="55" font-weight="bold" fill="white" text-anchor="middle">Articles</text>
+  </g>
+  
+  <g id="section3">
+    <rect x="1677" y="10" width="813" height="823" rx="20" fill="url(#grad1)" filter="url(#shadow)"/>
+    <text x="2083" y="350" font-family="Arial, sans-serif" font-size="120" fill="white" text-anchor="middle">📊</text>
+    <text x="2083" y="470" font-family="Arial, sans-serif" font-size="55" font-weight="bold" fill="white" text-anchor="middle">View</text>
+    <text x="2083" y="540" font-family="Arial, sans-serif" font-size="55" font-weight="bold" fill="white" text-anchor="middle">Stats</text>
+  </g>
+  
+  <!-- Bottom row -->
+  <g id="section4">
+    <rect x="10" y="853" width="813" height="823" rx="20" fill="url(#grad2)" filter="url(#shadow)"/>
+    <text x="416" y="1193" font-family="Arial, sans-serif" font-size="120" fill="white" text-anchor="middle">➕</text>
+    <text x="416" y="1313" font-family="Arial, sans-serif" font-size="55" font-weight="bold" fill="white" text-anchor="middle">Add New</text>
+    <text x="416" y="1383" font-family="Arial, sans-serif" font-size="55" font-weight="bold" fill="white" text-anchor="middle">Article</text>
+  </g>
+  
+  <g id="section5">
+    <rect x="843" y="853" width="814" height="823" rx="20" fill="url(#grad1)" filter="url(#shadow)"/>
+    <text x="1250" y="1193" font-family="Arial, sans-serif" font-size="120" fill="white" text-anchor="middle">📱</text>
+    <text x="1250" y="1313" font-family="Arial, sans-serif" font-size="55" font-weight="bold" fill="white" text-anchor="middle">Open</text>
+    <text x="1250" y="1383" font-family="Arial, sans-serif" font-size="55" font-weight="bold" fill="white" text-anchor="middle">LIFF App</text>
+  </g>
+  
+  <g id="section6">
+    <rect x="1677" y="853" width="813" height="823" rx="20" fill="url(#grad2)" filter="url(#shadow)"/>
+    <text x="2083" y="1193" font-family="Arial, sans-serif" font-size="120" fill="white" text-anchor="middle">❓</text>
+    <text x="2083" y="1313" font-family="Arial, sans-serif" font-size="55" font-weight="bold" fill="white" text-anchor="middle">Get</text>
+    <text x="2083" y="1383" font-family="Arial, sans-serif" font-size="55" font-weight="bold" fill="white" text-anchor="middle">Help</text>
+  </g>
+  
+  <!-- Decorative elements -->
+  <text x="1250" y="60" font-family="Arial, sans-serif" font-size="36" font-weight="bold" fill="#667eea" text-anchor="middle">📚 Article Intelligence Hub</text>
+</svg>

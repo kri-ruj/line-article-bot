@@ -57,12 +57,15 @@ nohup python3 app_unified_home.py > unified.log 2>&1 &
 nohup python3 app_kanban.py > kanban.log 2>&1 &
 ```
 
-### Ngrok Tunneling
+### Production URLs
 ```bash
-# For homepage + LINE webhook
-ngrok http 5003
+# LINE webhook URL (already configured)
+https://article-hub-959205905728.asia-northeast1.run.app/callback
 
-# Update LINE webhook URL to: https://[ngrok-url]/callback
+# LIFF Dashboard URL
+https://liff.line.me/2007870100-ao8GpgRQ
+
+# No ngrok needed - using Cloud Run production deployment
 ```
 
 ### Database Commands
@@ -99,11 +102,7 @@ grep ERROR *.log
 
 ### Port Conflicts
 - **Issue**: Port 5000 used by macOS AirPlay Receiver
-- **Solution**: Use ports 5001-5005 instead
-
-### ngrok Session Limits
-- **Issue**: Free account limited to 1 session
-- **Solution**: Kill existing ngrok before starting new one: `pkill ngrok`
+- **Solution**: Use ports 5001-5005 instead (for local development only)
 
 ## Environment Variables (.env)
 
