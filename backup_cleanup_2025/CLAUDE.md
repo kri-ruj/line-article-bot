@@ -4,24 +4,16 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## Project Overview
 
-LINE Article Intelligence System - A Flask-based application for saving, analyzing, and managing articles via LINE bot with Kanban-style progress tracking.
+LINE Article Intelligence System - A Flask-based application for saving, analyzing, and managing articles via LINE bot with Kanban-style progress tracking and AI features.
 
-## Project Structure (Refactored)
+## Architecture
 
-### Main Applications (3 versions)
-- **app_ultimate.py** - Standalone app with ALL features (Port 5001) - NO DEPENDENCIES, uses only Python standard library
-- **app_line_fixed.py** - LINE bot webhook handler (Port 5005) for receiving and processing LINE messages  
+### Main Applications
+
+- **app_ultimate.py** - Consolidated app with ALL features (Port 5001) - NO DEPENDENCIES, uses only Python standard library
+- **app_line_fixed.py** - LINE bot webhook handler (Port 5005) for receiving and processing LINE messages
 - **app_production.py** - Production-ready app with authentication and persistent storage
-
-### Core Modules
-- **ai_features.py** - AI analysis functions (sentiment, topic extraction, recommendations)
-- **url_extractor.py** - Article URL extraction and metadata fetching
-- **article_extractor.py** - Article content extraction
-- **message_templates.py** - LINE message templates
-- **google_sheets.py** - Google Sheets integration (legacy)
-
-### Demo
-- **simple_10x_demo.py** - Terminal demo of AI features
+- **app_firestore_final.py** - Google Firestore-integrated version for cloud deployment
 
 ### Database Schema (articles_kanban.db)
 

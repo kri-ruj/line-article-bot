@@ -1,0 +1,34 @@
+
+<!-- Add this before closing </body> tag -->
+<script>
+    // Emergency fix for missing functions
+    if (typeof toggleView === 'undefined') {
+        window.toggleView = function(view) {
+            console.log('Switching to view:', view);
+            // Hide all views
+            ['kanbanView', 'listView', 'teamView'].forEach(id => {
+                const el = document.getElementById(id);
+                if (el) el.style.display = 'none';
+            });
+            // Show selected view
+            const viewEl = document.getElementById(view + 'View');
+            if (viewEl) viewEl.style.display = 'block';
+            
+            // Update buttons
+            document.querySelectorAll('.view-btn').forEach(btn => {
+                btn.classList.toggle('active', btn.textContent.toLowerCase().includes(view));
+            });
+        };
+    }
+    
+    if (typeof checkDebug === 'undefined') {
+        window.checkDebug = function() {
+            fetch('/health')
+                .then(r => r.json())
+                .then(data => {
+                    alert('System Status: ' + JSON.stringify(data, null, 2));
+                })
+                .catch(err => alert('Debug check failed: ' + err));
+        };
+    }
+</script>
